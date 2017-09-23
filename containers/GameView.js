@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { View, Text, Dimensions, AsyncStorage, StatusBar } from 'react-native';
-import { Col, Row, Grid } from "react-native-easy-grid";
 
 import {styles, GRID_SIZE} from '../Styles';
 
@@ -80,12 +79,12 @@ export default class GameView extends Component {
 			let col = [];
 			for (let j = 0; j < GRID_SIZE; j++){
 				col.push(
-					<Row key={'row_' + i + '_col_' + j} style={styles.cell}>
+					<View key={'row_' + i + '_col_' + j} style={styles.cell}>
 						{this.renderCell(i,j)}
-					</Row>
+					</View>
 				);
 			}
-			grid.push(<Col key={'col_'+i} style={styles.col}>{col}</Col>);
+			grid.push(<View key={'col_'+i} style={styles.col}>{col}</View>);
 		}
 		return grid;
 	}
@@ -93,16 +92,16 @@ export default class GameView extends Component {
 	render() {
 		
 		return (
-			<Grid style={styles.container}>
+			<View style={styles.container}>
 				<StatusBar hidden={true} />
-				<Row style={styles.board}>
+				<View style={styles.board}>
 					{this.createBoard()}
-				</Row>
-				<Row style={{borderWidth:1,width:100,height:20}}>
+				</View>
+				<View style={{borderWidth:1,width:100,height:20}}>
 					<Text>Grid size:{GRID_SIZE}</Text>
 					{/*Dominoes*/}
-				</Row>
-			</Grid>
+				</View>
+			</View>
 		);
 	}
 

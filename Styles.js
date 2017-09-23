@@ -37,8 +37,9 @@ const styles = StyleSheet.create({
 	},
 	board: {
 		borderWidth:4,
-		height:width+100,
+		height:width,
 		width:width,
+		flexDirection:'row',
 	},
 	cell: {
 		borderWidth: 1,
