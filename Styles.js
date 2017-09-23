@@ -7,14 +7,15 @@ import {
 GRID_SIZE = 7;
 const {height, width} = Dimensions.get('window');
 cell_dim = Math.floor(width/GRID_SIZE);
-BOARD_TOP = 153;
+BOARD_TOP = 5;
+TILES_TOP = width + 100;
 
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: '#fff',
 		alignItems: 'center',
-		justifyContent: 'center',
+		justifyContent: 'flex-start',
 	},
 	textHeader:{
 		fontSize:24,
@@ -84,4 +85,4 @@ const styles = StyleSheet.create({
 	}
 });
 
-export {styles,GRID_SIZE,cell_dim,BOARD_TOP};
+export {styles,GRID_SIZE,cell_dim,BOARD_TOP,TILES_TOP};
