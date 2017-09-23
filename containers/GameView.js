@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { View, Text, Dimensions, AsyncStorage, StatusBar } from 'react-native';
 
 import {styles, GRID_SIZE} from '../Styles';
+import Draggable from '../components/Draggable';
+import Board from '../components/Board';
 
 export default class GameView extends Component {
 
@@ -21,16 +23,15 @@ export default class GameView extends Component {
 		}
 		this.state = {
 			board: board,
+			currentInd: null,
+			currentX: null,
+			currentY: null,
 		}
 	}
 
-	async resetBoard(){
-		board = this.createBoardValues();
-		await AsyncStorage.setItem('@thirtysix:board',JSON.stringify(board));
-		return board;
-	}
-
 	async componentWillMount(){
+		//gets the board if it is saved in memory
+		//otherwise, creates a new one
 		var board = null;
 		
 		let boardJson = await AsyncStorage.getItem('@thirtysix:board');
@@ -43,6 +44,12 @@ export default class GameView extends Component {
 		if (board.length !== GRID_SIZE) board = await this.resetBoard();
 		
 		this.setState({board:board});
+	}
+
+	async resetBoard(){
+		board = this.createBoardValues();
+		await AsyncStorage.setItem('@thirtysix:board',JSON.stringify(board));
+		return board;
 	}
 
 	createBoardValues(){
@@ -59,47 +66,34 @@ export default class GameView extends Component {
 		return board;
 	}
 
-	renderCell(i,j){
-		let cell = this.state.board[i][j];
-		let style = null;
-		if (cell.state === 'grey'){
-			style = styles.cell_grey;
-		} else if (cell.state === 'init'){
-			style = styles.cell_init;
-		} else {
-			style = styles.cell_domino;
-		}
-
-		return (<Text style={style}>{cell.value}</Text>);
-	}
-
-	createBoard(){
-		let grid = [];
-		for (let i = 0; i < GRID_SIZE; i++) { 
-			let col = [];
-			for (let j = 0; j < GRID_SIZE; j++){
-				col.push(
-					<View key={'row_' + i + '_col_' + j} style={styles.cell}>
-						{this.renderCell(i,j)}
-					</View>
-				);
-			}
-			grid.push(<View key={'col_'+i} style={styles.col}>{col}</View>);
-		}
-		return grid;
-	}
+	updateCurrentMovingTileValues = (i,x,y)=>this.setState({currentInd:i,currentX:x,currentY:y});
 
 	render() {
 		
 		return (
 			<View style={styles.container}>
 				<StatusBar hidden={true} />
-				<View style={styles.board}>
-					{this.createBoard()}
+				<View>
+					<Board data={this.state.board} ref="board" />
+					<View style={{borderWidth:1,width:100,height:20}}>
+						<Text>Grid size:{GRID_SIZE}</Text>
+					</View>
 				</View>
-				<View style={{borderWidth:1,width:100,height:20}}>
-					<Text>Grid size:{GRID_SIZE}</Text>
-					{/*Dominoes*/}
+				<Draggable 
+					left={50} top={50} index={0}
+					onChange={this.updateCurrentMovingTileValues} 
+				/>
+				<Draggable
+					left={150} top={50} index={1}
+					onChange={this.updateCurrentMovingTileValues} 
+				/>
+				<Draggable
+					left={250} top={50} index={2}
+					onChange={this.updateCurrentMovingTileValues} 
+				/>
+				<View>
+					<Text>Values for {this.state.currentInd}:</Text>
+					<Text>{Math.round(this.state.currentX)},{Math.round(this.state.currentY)}</Text>
 				</View>
 			</View>
 		);

@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 
 
-GRID_SIZE = 6;
+GRID_SIZE = 7;
 const {height, width} = Dimensions.get('window');
 cell_dim = Math.floor(width/GRID_SIZE);
 
@@ -83,4 +83,4 @@ const styles = StyleSheet.create({
 	}
 });
 
-export {styles,GRID_SIZE};
+export {styles,GRID_SIZE,cell_dim};
