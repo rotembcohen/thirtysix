@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { View, Text, Dimensions, AsyncStorage, StatusBar } from 'react-native';
 
-import {styles,GRID_SIZE,cell_dim,BOARD_TOP} from '../Styles';
+import {styles,GRID_SIZE,cell_dim,BOARD_TOP,TILES_TOP} from '../Styles';
 import Draggable from '../components/Draggable';
 import Board from '../components/Board';
 
@@ -26,6 +26,11 @@ export default class GameView extends Component {
 			currentInd: null,
 			currentX: null,
 			currentY: null,
+			tiles: [
+				{isDraggable:true},
+				{isDraggable:true},
+				{isDraggable:true}
+			]
 		}
 	}
 
@@ -77,13 +82,18 @@ export default class GameView extends Component {
 		let currentRow = Math.round((y - BOARD_TOP) / cell_dim);
 		let currentCol = Math.round(x / cell_dim);
 		let currentBoard = this.state.board;
+		let tiles = this.state.tiles;
+
 		if (currentRow >= 0 && currentRow < GRID_SIZE-1
 				&&
 			currentCol >= 0 && currentCol < GRID_SIZE){
+			//tile was placed correctly on the grid
 			currentBoard[currentCol][currentRow].state="domino";
 			currentBoard[currentCol][currentRow+1].state="domino";
+			tiles[i].isDraggable = false;
 		}
-		this.setState({board:currentBoard,currentInd:i,currentX:x,currentY:y});
+
+		this.setState({board:currentBoard,currentInd:i,currentX:x,currentY:y,tiles:tiles});
 	}
 
 	render() {
@@ -91,25 +101,25 @@ export default class GameView extends Component {
 		return (
 			<View style={styles.container}>
 				<StatusBar hidden={true} />
-				<View>
-					<Board data={this.state.board} />
-					<View style={{borderWidth:1,width:100,height:20}}>
-						<Text>Grid size:{GRID_SIZE}</Text>
-					</View>
-				</View>
+				<Board data={this.state.board} />
+				
 				<Draggable 
-					left={50} top={50} index={0}
-					onChange={this.updateCurrentMovingTileValues} 
+					left={50} top={TILES_TOP} index={0}
+					onChange={this.updateCurrentMovingTileValues}
+					isDraggable={this.state.tiles[0].isDraggable}
 				/>
 				<Draggable
-					left={150} top={50} index={1}
-					onChange={this.updateCurrentMovingTileValues} 
+					left={150} top={TILES_TOP} index={1}
+					onChange={this.updateCurrentMovingTileValues}
+					isDraggable={this.state.tiles[1].isDraggable}
 				/>
 				<Draggable
-					left={250} top={50} index={2}
-					onChange={this.updateCurrentMovingTileValues} 
+					left={250} top={TILES_TOP} index={2}
+					onChange={this.updateCurrentMovingTileValues}
+					isDraggable={this.state.tiles[2].isDraggable}
 				/>
 				<View>
+					<Text>Grid size:{GRID_SIZE}</Text>
 					<Text>Values for {this.state.currentInd}:</Text>
 					<Text>{Math.round(this.state.currentX)},{Math.round(this.state.currentY)}</Text>
 					<Text>Current Cell: {this.getCurrentCell()}</Text>

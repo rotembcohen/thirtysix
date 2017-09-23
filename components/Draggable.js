@@ -56,7 +56,7 @@ export default class Draggable extends Component {
 
   // Should we become active when the user presses down on the square?
   handleStartShouldSetPanResponder = () => {
-    return true
+    return this.props.isDraggable;
   }
 
   // We were granted responder status! Let's update the UI
