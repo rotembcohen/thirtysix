@@ -74,7 +74,7 @@ export default class GameView extends Component {
 			<View style={styles.container}>
 				<StatusBar hidden={true} />
 				<View>
-					<Board data={this.state.board} ref="board" />
+					<Board data={this.state.board} />
 					<View style={{borderWidth:1,width:100,height:20}}>
 						<Text>Grid size:{GRID_SIZE}</Text>
 					</View>
