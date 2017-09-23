@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { View, Text, Dimensions, AsyncStorage, StatusBar } from 'react-native';
 
-import {styles, GRID_SIZE} from '../Styles';
+import {styles,GRID_SIZE,cell_dim,BOARD_TOP} from '../Styles';
 import Draggable from '../components/Draggable';
 import Board from '../components/Board';
 
@@ -66,7 +66,25 @@ export default class GameView extends Component {
 		return board;
 	}
 
-	updateCurrentMovingTileValues = (i,x,y)=>this.setState({currentInd:i,currentX:x,currentY:y});
+	getCurrentCell(){
+		let row = Math.round(this.state.currentX / cell_dim);
+		let col = Math.round((Number(this.state.currentY) - BOARD_TOP) / cell_dim);
+
+		return row +','+ col;
+	}
+
+	updateCurrentMovingTileValues=(i,x,y)=>{
+		let currentRow = Math.round((y - BOARD_TOP) / cell_dim);
+		let currentCol = Math.round(x / cell_dim);
+		let currentBoard = this.state.board;
+		if (currentRow >= 0 && currentRow < GRID_SIZE-1
+				&&
+			currentCol >= 0 && currentCol < GRID_SIZE){
+			currentBoard[currentCol][currentRow].state="domino";
+			currentBoard[currentCol][currentRow+1].state="domino";
+		}
+		this.setState({board:currentBoard,currentInd:i,currentX:x,currentY:y});
+	}
 
 	render() {
 		
@@ -94,6 +112,7 @@ export default class GameView extends Component {
 				<View>
 					<Text>Values for {this.state.currentInd}:</Text>
 					<Text>{Math.round(this.state.currentX)},{Math.round(this.state.currentY)}</Text>
+					<Text>Current Cell: {this.getCurrentCell()}</Text>
 				</View>
 			</View>
 		);

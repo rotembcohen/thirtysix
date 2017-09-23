@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, Text, PanResponder } from 'react-native';
+import { View, Text } from 'react-native';
 
-import {styles, GRID_SIZE} from '../Styles';
+import { styles, GRID_SIZE } from '../Styles';
 
 export default class Board extends Component {
 	

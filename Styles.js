@@ -7,6 +7,7 @@ import {
 GRID_SIZE = 7;
 const {height, width} = Dimensions.get('window');
 cell_dim = Math.floor(width/GRID_SIZE);
+BOARD_TOP = 153;
 
 const styles = StyleSheet.create({
 	container: {
@@ -54,10 +55,10 @@ const styles = StyleSheet.create({
 		width: cell_dim,
 	},
 	cell_grey: {
-		color: 'grey',
+		color: '#ccc',
 	},
 	cell_init: {
-		color: '#ffccbb',
+		color: '#fcb',
 	},
 	cell_domino: {
 		color: 'black',
@@ -83,4 +84,4 @@ const styles = StyleSheet.create({
 	}
 });
 
-export {styles,GRID_SIZE,cell_dim};
+export {styles,GRID_SIZE,cell_dim,BOARD_TOP};
