@@ -9,6 +9,7 @@ const {height, width} = Dimensions.get('window');
 cell_dim = Math.floor(width/GRID_SIZE);
 BOARD_TOP = 5;
 TILES_TOP = width + 100;
+INITIAL_TILES = 4;
 
 const styles = StyleSheet.create({
 	container: {
@@ -85,4 +86,4 @@ const styles = StyleSheet.create({
 	}
 });
 
-export {styles,GRID_SIZE,cell_dim,BOARD_TOP,TILES_TOP};
+export {styles,GRID_SIZE,cell_dim,BOARD_TOP,TILES_TOP,INITIAL_TILES};

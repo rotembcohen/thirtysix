@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { View, Text, Dimensions, AsyncStorage, StatusBar } from 'react-native';
 
-import {styles,GRID_SIZE,cell_dim,BOARD_TOP,TILES_TOP} from '../Styles';
+import {styles,GRID_SIZE,cell_dim,BOARD_TOP,TILES_TOP,INITIAL_TILES} from '../Styles';
 import Draggable from '../components/Draggable';
 import Board from '../components/Board';
 
