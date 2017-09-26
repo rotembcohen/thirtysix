@@ -21,16 +21,16 @@ export default class GameView extends Component {
 			}
 			board[i] = row;
 		}
+		var tiles = [];
+		for (let i=0; i < INITIAL_TILES; i++){
+			tiles[i] = {isDraggable:true};
+		}
 		this.state = {
 			board: board,
 			currentInd: null,
 			currentX: null,
 			currentY: null,
-			tiles: [
-				{isDraggable:true},
-				{isDraggable:true},
-				{isDraggable:true}
-			]
+			tiles: tiles
 		}
 	}
 
