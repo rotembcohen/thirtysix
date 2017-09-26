@@ -97,7 +97,7 @@ export default class GameView extends Component {
 		return row +','+ col;
 	}
 
-	updateCurrentMovingTileValues=(i,x,y)=>{
+	updateTiles=(i,x,y)=>{
 		let currentRow = Math.round((y - BOARD_TOP) / cell_dim);
 		let currentCol = Math.round(x / cell_dim);
 		let currentBoard = this.state.board;
@@ -110,8 +110,10 @@ export default class GameView extends Component {
 			currentBoard[currentCol][currentRow].state="domino";
 			currentBoard[currentCol][currentRow+1].state="domino";
 			tiles[i].isDraggable = false;
+			tiles[i].top = y;
+			tiles[i].left = x;
 		}
-
+		AsyncStorage.setItem('@thirtysix:tiles',JSON.stringify(tiles));
 		this.setState({board:currentBoard,currentInd:i,currentX:x,currentY:y,tiles:tiles});
 	}
 
@@ -136,7 +138,7 @@ export default class GameView extends Component {
 					left={this.state.tiles[i].left}
 					top={this.state.tiles[i].top}
 					index={i} key={i}
-					onChange={this.updateCurrentMovingTileValues}
+					onChange={this.updateTiles}
 					isDraggable={this.state.tiles[i].isDraggable}
 				/>
 			);
