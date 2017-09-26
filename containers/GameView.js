@@ -57,10 +57,8 @@ export default class GameView extends Component {
 	async createBoard(){
 		board = this.createBoardValues();
 		tiles = this.createTiles();
-		await AsyncStorage.multiSet(
-			[['@thirtysix:board',JSON.stringify(board)],
-			['@thirtysix:tiles',JSON.stringify(tiles)]]
-		);
+		//TODO: check errors
+		this.storeData(board,tiles);
 		return {board:board,tiles:tiles};
 	}
 
@@ -122,6 +120,8 @@ export default class GameView extends Component {
 		let legal = false;
 
 		//check if board and tile's values match
+		//this function assumes that we check the whole tile was placed on the board
+		//before calling it
 		if (
 			(topValue === 0 || topValue === tiles[i]['valueTop'])
 				&&
@@ -142,8 +142,9 @@ export default class GameView extends Component {
 			// console.log("ruling error:",topValue,tiles[i]['valueTop'],bottomValue,tiles[i]['valueBottom']);
 		}
 			
+		//TODO: check errors
+		this.storeData(board,tiles);
 		
-		AsyncStorage.setItem('@thirtysix:tiles',JSON.stringify(tiles));
 		//TODO: should happen only if move was legal?
 		this.setState({board:currentBoard,currentInd:i,currentX:x,currentY:y,tiles:tiles});
 		return legal;
@@ -185,6 +186,14 @@ export default class GameView extends Component {
 				{renderedTiles}
 			</View>
 		);
+	}
+
+	async storeData(board,tiles){
+		const response = await AsyncStorage.multiSet(
+			[['@thirtysix:board',JSON.stringify(board)],
+			['@thirtysix:tiles',JSON.stringify(tiles)]]
+		);
+		return response;
 	}
 
 	render() {
