@@ -46,8 +46,8 @@ export default class Draggable extends Component {
           style={[styles.square, style]}
         >
           <Text style={styles.text}>
-            top:{Math.round(this.state.initialTop)} {"\n"}
-            left:{Math.round(this.state.initialLeft)}
+            top:{this.props.valueTop} {"\n"}
+            Bottom:{this.props.valueBottom}
           </Text>
         </View>
       
@@ -80,17 +80,23 @@ export default class Draggable extends Component {
 
     let newLeft = initialLeft + gestureState.dx;
     let newTop = initialTop + gestureState.dy;
+    let shouldMove = false;
     
     //place tile in the correct placement in cell ("snap into place")
     let response = this.getCurrentCell(newLeft,newTop);
     if (response['insideBoard'] && !response['isInTheMiddle']){
+      let onChange = this.props.onChange;
+      shouldMove = onChange(this.props.index,newLeft,newTop);
+    }
+    
+    if (shouldMove){
       newTop = response['col']*cell_dim + BOARD_TOP;
       newLeft = response['row']*cell_dim + BOARD_LEFT;
     }else{
       newTop = initialTop;
       newLeft = initialLeft;
     }
-    
+
     // The drag is finished. Set the initialTop and initialLeft so that
     // the new position sticks. Reset offsetTop and offsetLeft for the next drag.
     this.setState({
@@ -100,8 +106,6 @@ export default class Draggable extends Component {
       offsetTop: 0,
       offsetLeft: 0,
     });
-    let onChange = this.props.onChange;
-    onChange(this.props.index,newLeft,newTop);
   }
 
   getCurrentCell(currentX,currentY){
