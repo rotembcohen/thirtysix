@@ -121,31 +121,28 @@ export default class GameView extends Component {
 		//will return true iff domino can be legaly placed in grid
 		let legal = false;
 
-		if (currentRow >= 0 && currentRow < GRID_SIZE-1
+		//check if board and tile's values match
+		if (
+			(topValue === 0 || topValue === tiles[i]['valueTop'])
 				&&
-			currentCol >= 0 && currentCol < GRID_SIZE){
-			//tile was placed correctly on the grid
-			if (
-				(topValue === 0 || topValue === tiles[i]['valueTop'])
-					&&
-				(bottomValue === 0 || bottomValue === tiles[i]['valueBottom'])
-				){
-				// console.log("ruling is ok:",topValue,tiles[i]['valueTop'],bottomValue,tiles[i]['valueBottom']);
-				//update board
-				topCell.state="domino";
-				topCell.value=tiles[i]['valueTop'];
-				bottomCell.state="domino";
-				bottomCell.value=tiles[i]['valueBottom'];
-				//update tiles
-				tiles[i].isDraggable = false;
-				tiles[i].top = y;
-				tiles[i].left = x;
-				legal = true;
-			}else{
-				// console.log("ruling error:",topValue,tiles[i]['valueTop'],bottomValue,tiles[i]['valueBottom']);
-			}
-			
+			(bottomValue === 0 || bottomValue === tiles[i]['valueBottom'])
+			){
+			// console.log("ruling is ok:",topValue,tiles[i]['valueTop'],bottomValue,tiles[i]['valueBottom']);
+			//update board
+			topCell.state="domino";
+			topCell.value=tiles[i]['valueTop'];
+			bottomCell.state="domino";
+			bottomCell.value=tiles[i]['valueBottom'];
+			//update tiles
+			tiles[i].isDraggable = false;
+			tiles[i].top = y;
+			tiles[i].left = x;
+			legal = true;
+		}else{
+			// console.log("ruling error:",topValue,tiles[i]['valueTop'],bottomValue,tiles[i]['valueBottom']);
 		}
+			
+		
 		AsyncStorage.setItem('@thirtysix:tiles',JSON.stringify(tiles));
 		//TODO: should happen only if move was legal?
 		this.setState({board:currentBoard,currentInd:i,currentX:x,currentY:y,tiles:tiles});
