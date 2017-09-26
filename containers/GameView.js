@@ -13,24 +13,13 @@ export default class GameView extends Component {
 
 	constructor(props){
 		super(props);
-		var board = [];
-		for (let i=0; i < GRID_SIZE; i++){
-			var row = []
-			for (let j=0; j < GRID_SIZE; j++){
-				row[j] = {value:0,state:'init'};
-			}
-			board[i] = row;
-		}
-		var tiles = [];
-		for (let i=0; i < INITIAL_TILES; i++){
-			tiles[i] = {isDraggable:true};
-		}
 		this.state = {
-			board: board,
+			board: [],
+			tiles: [],
 			currentInd: null,
 			currentX: null,
 			currentY: null,
-			tiles: tiles
+			boardLoaded:false,
 		}
 	}
 
@@ -38,23 +27,41 @@ export default class GameView extends Component {
 		//gets the board if it is saved in memory
 		//otherwise, creates a new one
 		var board = null;
+		var tiles = null;
 		
-		let boardJson = await AsyncStorage.getItem('@thirtysix:board');
+		let data = await AsyncStorage.multiGet(['@thirtysix:board','@thirtysix:tiles']);
+		let boardJson = data[0][1];
+		let tilesJson = data[1][1];
 
-		if (boardJson === null){
-			board = await this.createBoard()
+		if (boardJson === null || tilesJson === null){
+			let response = await this.createBoard();
+			board = response['board'];
+			tiles = response['tiles'];
 		}else{
 			board = JSON.parse(boardJson);
+			tiles = JSON.parse(tilesJson);
 		}
-		if (board.length !== GRID_SIZE) board = await this.createBoard();
-		
-		this.setState({board:board});
+		if (board.length !== GRID_SIZE){
+			let response = await this.createBoard();
+			board = response['board'];
+			tiles = response['tiles'];
+		}
+
+		this.setState({
+			board:board,
+			tiles:tiles,
+			boardLoaded:true,
+		});
 	}
 
 	async createBoard(){
 		board = this.createBoardValues();
-		await AsyncStorage.setItem('@thirtysix:board',JSON.stringify(board));
-		return board;
+		tiles = this.createTiles();
+		await AsyncStorage.multiSet(
+			[['@thirtysix:board',JSON.stringify(board)],
+			['@thirtysix:tiles',JSON.stringify(tiles)]]
+		);
+		return {board:board,tiles:tiles};
 	}
 
 	createBoardValues(){
@@ -69,6 +76,18 @@ export default class GameView extends Component {
 			board[i] = row;
 		}
 		return board;
+	}
+
+	createTiles(){
+		var tiles = [];
+		for (let i=0;i<INITIAL_TILES;i++){
+			tiles[i]={
+				isDraggable:true,
+				top:TILES_TOP,
+				left:10 + (cell_dim+5)*i,
+			}
+		}
+		return tiles;
 	}
 
 	getCurrentCell(){
@@ -97,41 +116,58 @@ export default class GameView extends Component {
 	}
 
 	async resetBoard(){
-		board = await this.createBoard();
-		this.setState({board:board});
+		this.setState({boardLoaded:false});
+		let response = await this.createBoard();
+		board = response['board'];
+		tiles = response['tiles'];
+		
+		this.setState({
+			board:board,
+			tiles:tiles,
+			boardLoaded:true,
+		});
+	}
+
+	renderTiles(){
+		let renderedTiles = [];	
+		for (let i=0; i < INITIAL_TILES; i++){
+			renderedTiles.push(
+				<Draggable 
+					left={this.state.tiles[i].left}
+					top={this.state.tiles[i].top}
+					index={i} key={i}
+					onChange={this.updateCurrentMovingTileValues}
+					isDraggable={this.state.tiles[i].isDraggable}
+				/>
+			);
+		}
+	
+		return (
+			<View style={{width:'100%',height:cell_dim*3}}>
+				{renderedTiles}
+			</View>
+		);
 	}
 
 	render() {
-		
-		return (
-			<View style={styles.container}>
-				<StatusBar hidden={true} />
-				<Board data={this.state.board} />
-				
-				<Draggable 
-					left={50} top={TILES_TOP} index={0}
-					onChange={this.updateCurrentMovingTileValues}
-					isDraggable={this.state.tiles[0].isDraggable}
-				/>
-				<Draggable
-					left={150} top={TILES_TOP} index={1}
-					onChange={this.updateCurrentMovingTileValues}
-					isDraggable={this.state.tiles[1].isDraggable}
-				/>
-				<Draggable
-					left={250} top={TILES_TOP} index={2}
-					onChange={this.updateCurrentMovingTileValues}
-					isDraggable={this.state.tiles[2].isDraggable}
-				/>
-				<View>
-					<Text>Grid size:{GRID_SIZE}</Text>
-					<Text>Values for {this.state.currentInd}:</Text>
-					<Text>{Math.round(this.state.currentX)},{Math.round(this.state.currentY)}</Text>
-					<Text>Current Cell: {this.getCurrentCell()}</Text>
-					<Button title="RESET" onPress={()=>{this.resetBoard()}} />
+		if(this.state.boardLoaded){
+			return (
+				<View style={styles.container}>
+					<StatusBar hidden={true} />
+					<Board data={this.state.board} />
+					{this.renderTiles()}
+					<View>
+						<Text>Grid size:{GRID_SIZE}</Text>
+						<Text>Values for {this.state.currentInd}:</Text>
+						<Text>{Math.round(this.state.currentX)},{Math.round(this.state.currentY)}</Text>
+						<Text>Current Cell: {this.getCurrentCell()}</Text>
+						<Button title="RESET" onPress={()=>{this.resetBoard()}} />
+					</View>
 				</View>
-			</View>
-		);
+			);
+		}else{
+			return(<View style={styles.container} ><StatusBar hidden={true} /></View>);
+		}
 	}
 
 

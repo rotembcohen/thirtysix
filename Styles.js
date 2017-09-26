@@ -7,9 +7,9 @@ import {
 GRID_SIZE = 7;
 const {height, width} = Dimensions.get('window');
 cell_dim = Math.floor(width/GRID_SIZE);
-BOARD_TOP = 5;
-TILES_TOP = width + 100;
-INITIAL_TILES = 4;
+BOARD_TOP = -405;
+TILES_TOP = 0;
+INITIAL_TILES = 6;
 
 const styles = StyleSheet.create({
 	container: {
