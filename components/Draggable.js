@@ -85,14 +85,14 @@ export default class Draggable extends Component {
     //place tile in the correct placement in cell ("snap into place")
     let response = this.getCurrentCell(newLeft,newTop);
     if (response['insideBoard'] && !response['isInTheMiddle']){
+      newTop = response['col']*cell_dim + BOARD_TOP;
+      newLeft = response['row']*cell_dim + BOARD_LEFT;
       let onChange = this.props.onChange;
       shouldMove = onChange(this.props.index,newLeft,newTop);
     }
     
-    if (shouldMove){
-      newTop = response['col']*cell_dim + BOARD_TOP;
-      newLeft = response['row']*cell_dim + BOARD_LEFT;
-    }else{
+    //move is not legal,reset tile placement
+    if (!shouldMove){
       newTop = initialTop;
       newLeft = initialLeft;
     }

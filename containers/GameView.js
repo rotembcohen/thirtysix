@@ -113,8 +113,10 @@ export default class GameView extends Component {
 		let currentBoard = this.state.board;
 		let tiles = this.state.tiles;
 
-		let topValue = currentBoard[currentCol][currentRow].value;
-		let bottomValue = currentBoard[currentCol][currentRow+1].value;
+		let topCell = currentBoard[currentCol][currentRow];
+		let bottomCell = currentBoard[currentCol][currentRow+1];
+		let topValue = topCell.value;
+		let bottomValue = bottomCell.value;
 		
 		//will return true iff domino can be legaly placed in grid
 		let legal = false;
@@ -129,8 +131,12 @@ export default class GameView extends Component {
 				(bottomValue === 0 || bottomValue === tiles[i]['valueBottom'])
 				){
 				// console.log("ruling is ok:",topValue,tiles[i]['valueTop'],bottomValue,tiles[i]['valueBottom']);
-				currentBoard[currentCol][currentRow].state="domino";
-				currentBoard[currentCol][currentRow+1].state="domino";
+				//update board
+				topCell.state="domino";
+				topCell.value=tiles[i]['valueTop'];
+				bottomCell.state="domino";
+				bottomCell.value=tiles[i]['valueBottom'];
+				//update tiles
 				tiles[i].isDraggable = false;
 				tiles[i].top = y;
 				tiles[i].left = x;
