@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, Dimensions, AsyncStorage, StatusBar } from 'react-native';
+import { View, Text, Dimensions, AsyncStorage, StatusBar,Button } from 'react-native';
 
 import {styles,GRID_SIZE,cell_dim,BOARD_TOP,TILES_TOP,INITIAL_TILES} from '../Styles';
 import Draggable from '../components/Draggable';
@@ -42,16 +42,16 @@ export default class GameView extends Component {
 		let boardJson = await AsyncStorage.getItem('@thirtysix:board');
 
 		if (boardJson === null){
-			board = await this.resetBoard()
+			board = await this.createBoard()
 		}else{
 			board = JSON.parse(boardJson);
 		}
-		if (board.length !== GRID_SIZE) board = await this.resetBoard();
+		if (board.length !== GRID_SIZE) board = await this.createBoard();
 		
 		this.setState({board:board});
 	}
 
-	async resetBoard(){
+	async createBoard(){
 		board = this.createBoardValues();
 		await AsyncStorage.setItem('@thirtysix:board',JSON.stringify(board));
 		return board;
@@ -96,6 +96,11 @@ export default class GameView extends Component {
 		this.setState({board:currentBoard,currentInd:i,currentX:x,currentY:y,tiles:tiles});
 	}
 
+	async resetBoard(){
+		board = await this.createBoard();
+		this.setState({board:board});
+	}
+
 	render() {
 		
 		return (
@@ -123,6 +128,7 @@ export default class GameView extends Component {
 					<Text>Values for {this.state.currentInd}:</Text>
 					<Text>{Math.round(this.state.currentX)},{Math.round(this.state.currentY)}</Text>
 					<Text>Current Cell: {this.getCurrentCell()}</Text>
+					<Button title="RESET" onPress={()=>{this.resetBoard()}} />
 				</View>
 			</View>
 		);
