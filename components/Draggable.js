@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { StyleSheet, View, Text, PanResponder } from 'react-native'
 
-import {cell_dim} from '../Styles';
+import {cell_dim,BOARD_TOP,BOARD_LEFT,GRID_SIZE,MIDDLE_MARGIN} from '../Styles';
 
 export default class Draggable extends Component {
 
@@ -74,13 +74,23 @@ export default class Draggable extends Component {
     })
   }
 
-  // When the touch/mouse is lifted
+  // When the touch/mouse is released
   handlePanResponderEnd = (e, gestureState) => {
     const {initialTop, initialLeft} = this.state;
 
     let newLeft = initialLeft + gestureState.dx;
     let newTop = initialTop + gestureState.dy;
-
+    
+    //place tile in the correct placement in cell ("snap into place")
+    let response = this.getCurrentCell(newLeft,newTop);
+    if (response['insideBoard'] && !response['isInTheMiddle']){
+      newTop = response['col']*cell_dim + BOARD_TOP;
+      newLeft = response['row']*cell_dim + BOARD_LEFT;
+    }else{
+      newTop = initialTop;
+      newLeft = initialLeft;
+    }
+    
     // The drag is finished. Set the initialTop and initialLeft so that
     // the new position sticks. Reset offsetTop and offsetLeft for the next drag.
     this.setState({
@@ -93,7 +103,30 @@ export default class Draggable extends Component {
     let onChange = this.props.onChange;
     onChange(this.props.index,newLeft,newTop);
   }
+
+  getCurrentCell(currentX,currentY){
+    let offsetX = currentX / cell_dim;
+    let offsetY = (currentY - BOARD_TOP) / cell_dim;
+    let row = Math.round(offsetX);
+    let col = Math.round(offsetY);
+    //tile landed inside board?
+    let insideBoard = (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE);
+
+    let isInTheMiddle = (this.isInTheMiddle(offsetX,row) || this.isInTheMiddle(offsetY,col));
+
+    return {row:row,col:col,insideBoard:insideBoard,isInTheMiddle:isInTheMiddle}
+  }
+
+  //helps to make sure tile didn't land in the middle between two cells
+  //and therefore not clear where it should land exactly
+  isInTheMiddle(precise,rounded){
+    let abs_diff = Math.abs(precise - rounded);
+    return abs_diff > MIDDLE_MARGIN && abs_diff < (1 - MIDDLE_MARGIN);
+  }
+
 }
+
+
 
 const styles = StyleSheet.create({
   container: {

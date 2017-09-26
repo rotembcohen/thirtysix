@@ -7,9 +7,11 @@ import {
 GRID_SIZE = 7;
 const {height, width} = Dimensions.get('window');
 cell_dim = Math.floor(width/GRID_SIZE);
-BOARD_TOP = -405;
+BOARD_TOP = -407;
+BOARD_LEFT = 4;
 TILES_TOP = 0;
 INITIAL_TILES = 6;
+MIDDLE_MARGIN = 0.33;
 
 const styles = StyleSheet.create({
 	container: {
@@ -86,4 +88,4 @@ const styles = StyleSheet.create({
 	}
 });
 
-export {styles,GRID_SIZE,cell_dim,BOARD_TOP,TILES_TOP,INITIAL_TILES};
+export {styles,GRID_SIZE,cell_dim,BOARD_TOP,BOARD_LEFT,TILES_TOP,INITIAL_TILES,MIDDLE_MARGIN};
