@@ -135,8 +135,16 @@ export default class Draggable extends Component {
     let row = Math.round(offsetY);
     let col = Math.round(offsetX);
 
+    let orientation = this.props.orientation;
+
     //tile landed inside board?
-    let insideBoard = (row >= 0 && row < (GRID_SIZE-1) && col >= 0 && col < GRID_SIZE);
+    if (orientation % 2 === 0){
+      //north-south
+      var insideBoard = (row >= 0 && row < (GRID_SIZE-1) && col >= 0 && col < GRID_SIZE);
+    }else{
+      //west-east
+      var insideBoard = (row >= 0 && row < GRID_SIZE && col >= 0 && col < (GRID_SIZE-1));
+    }
 
     let isInTheMiddle = (this.isInTheMiddle(offsetX,row) || this.isInTheMiddle(offsetY,col));
 

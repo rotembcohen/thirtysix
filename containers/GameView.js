@@ -90,101 +90,178 @@ export default class GameView extends Component {
 		return tiles;
 	}
 
-	getCurrentCell(){
-		let row = Math.round(this.state.currentX / cell_dim);
-		let col = Math.round((Number(this.state.currentY) - BOARD_TOP) / cell_dim);
+	getCurrentCell(currentX,currentY){
+		let offsetY = (currentY - BOARD_TOP) / cell_dim;
+		let offsetX = currentX / cell_dim;
 
-		return row +','+ col;
+		let row = Math.round(offsetY);
+		let col = Math.round(offsetX);
+
+		return {row:row,col:col}
 	}
 
-	isDropLegal(i,k,x,y){
+	isDropLegal(i,k,x,y,values){
 	
 		//this function assumes that we check the whole tile was placed on the board
 		//before calling it
-		
-		let currentRow = Math.round((y - BOARD_TOP) / cell_dim);
-		let currentCol = Math.round(x / cell_dim);
-		let currentBoard = this.state.board;
+
+		let currentCell = this.getCurrentCell(x,y);
+		let currentRow = currentCell.row;
+		let currentCol = currentCell.col;
 		let tiles = this.state.tiles;
 
-		let topCell = currentBoard[currentCol][currentRow];
-		let bottomCell = currentBoard[currentCol][currentRow+1];
-		let boardTopValue = topCell.value;
-		let boardBottomValue = bottomCell.value;
+		let orientation = tiles[k].orientation;
 
-		let topValue = tiles[k]['topValue'];
-		let bottomValue = tiles[k]['bottomValue'];
+		//top or left:
+		let row = currentRow;
+		let col = currentCol;
+		let value = values.topLeft;
+		if (!this.matchTileBoard(row,col,value)) return false;
+		if (!this.matchAdjacent(row,col,value,orientation)) return false;
 
-		//top value doesn't match
-		if (boardTopValue !== 0 && boardTopValue !== topValue) return false;
-
-		//bottom value doesn't match
-		if (boardBottomValue !== 0 && boardBottomValue !== bottomValue) return false;
-
-		//adjacent dominos for topValue
-		//top
-		if (this.checkAdjucentCell(currentRow-1,currentCol,topValue) === false) return false;
-		//left
-		if (this.checkAdjucentCell(currentRow,currentCol-1,topValue) === false) return false;
-		//right
-		if (this.checkAdjucentCell(currentRow,currentCol+1,topValue) === false) return false;
-		
-		//adjacent dominos for topValue
-		//bottom 
-		if (this.checkAdjucentCell(currentRow+2,currentCol,bottomValue) === false) return false;
-		//left
-		if (this.checkAdjucentCell(currentRow+1,currentCol-1,bottomValue) === false) return false;
-		//right
-		if (this.checkAdjucentCell(currentRow+1,currentCol+1,bottomValue) === false) return false;
+		//bottom or right:
+		row = (orientation % 2 === 0) ? currentRow + 1 : currentRow;
+		col = (orientation % 2 === 0) ? currentCol : currentCol + 1;
+		value = values.bottomRight;
+		if (!this.matchTileBoard(row,col,value)) return false;
+		if (!this.matchAdjacent(row,col,value,orientation)) return false;
 
 		//all checks passed, tile can be placed
 		return true;
 
 	}
 
-	checkAdjucentCell(cell_row,cell_col,value){
+	matchAdjacent(cell_row,cell_col,value,direction){
+		
+		let cellToTheNorth = 	{row:cell_row - 1, 	col:cell_col};
+		let cellToTheEast = 	{row:cell_row, 		col:cell_col + 1};
+		let cellToTheSouth = 	{row:cell_row + 1, 	col:cell_col};
+		let cellToTheWest =		{row:cell_row, 		col:cell_col - 1};
+
+		let cellsToCheck = [];
+
+		switch(direction){
+			//check north
+			case 0:
+				cellsToCheck.push(cellToTheWest);
+				cellsToCheck.push(cellToTheNorth);
+				cellsToCheck.push(cellToTheEast);
+				break;
+			//check west
+			case 1:
+				cellsToCheck.push(cellToTheSouth);
+				cellsToCheck.push(cellToTheNorth);
+				cellsToCheck.push(cellToTheEast);
+				break;
+			//check south
+			case 2:
+				cellsToCheck.push(cellToTheWest);
+				cellsToCheck.push(cellToTheSouth);
+				cellsToCheck.push(cellToTheEast);
+				break;
+			//check east
+			case 3:
+				cellsToCheck.push(cellToTheWest);
+				cellsToCheck.push(cellToTheNorth);
+				cellsToCheck.push(cellToTheSouth);
+				break;
+		}
+		
+		for (let i=0;i<cellsToCheck.length;i++){
+			if (this.matchTileBoard(cellsToCheck[i].row,cellsToCheck[i].col,value) === false) return false;	
+		}
+		
+		return true;
+		
+	}
+
+	matchTileBoard(cell_row,cell_col,value){
 		let board = this.state.board;
 		let adjacentCell = (cell_row >= 0 && cell_col >= 0 && cell_row < GRID_SIZE && cell_col < GRID_SIZE) ? board[cell_col][cell_row] : null;
 		let adjacentValue = (adjacentCell && adjacentCell.state==='domino') ? adjacentCell.value : -1;
-		return (adjacentValue <= 0 || adjacentValue === value);
+		let response = (adjacentValue <= 0 || adjacentValue === value);
+		//if (!response) console.log("check failed for row/col/value/boardValue: ",cell_row,cell_col,value,adjacentValue);
+		return response;
 	}
-
+	
+	//i = index of tile in the tile board (0<=index<INITIAL_TILES)
+	//k = key of tile in tiles array (0<=key<this.state.tiles.length)
+	//x = x location of tile when gesture ended
+	//y = y location of tile when gesture ended
 	updateTiles=(i,k,x,y)=>{
-		let currentRow = Math.round((y - BOARD_TOP) / cell_dim);
-		let currentCol = Math.round(x / cell_dim);
-		let currentBoard = this.state.board;
+		
+		let currentCell = this.getCurrentCell(x,y);
+		let currentRow = currentCell.row;
+		let currentCol = currentCell.col;
+		let board = this.state.board;
 		let tiles = this.state.tiles;
 
-		let topCell = currentBoard[currentCol][currentRow];
-		let bottomCell = currentBoard[currentCol][currentRow+1];
-		
+		let orientation = tiles[k].orientation;
+
+		//handle rotation
+		switch(orientation){
+			case 0:
+				//top:top, bottom:bottom
+				var values = {topLeft:tiles[k].topValue,bottomRight:tiles[k].bottomValue};
+				break;
+			case 1:
+				//left:bottom, right:top
+				var values = {topLeft:tiles[k].bottomValue,bottomRight:tiles[k].topValue};
+				break;
+			case 2:
+				//top:bottom, bottom:top
+				var values = {topLeft:tiles[k].bottomValue,bottomRight:tiles[k].topValue};
+				break;
+			case 3:
+				//left:top, right:bottom
+				var values = {topLeft:tiles[k].topValue,bottomRight:tiles[k].bottomValue};
+				break;
+		}
+
 		//will return true iff domino can be legaly placed in grid
-		let legal = this.isDropLegal(i,k,x,y);
+		let legal = this.isDropLegal(i,k,x,y,values);
 
 		if (legal){
 			// console.log("ruling is ok:",topValue,tiles[i]['topValue'],bottomValue,tiles[i]['bottomValue']);
 			//update board
-			topCell.state="domino";
-			topCell.value=tiles[k]['topValue'];
-			bottomCell.state="domino";
-			bottomCell.value=tiles[k]['bottomValue'];
+			let currentCell = this.getCurrentCell(x,y);
+			let board = this.state.board;
+			let tiles = this.state.tiles;
+			let tile = tiles[k];
+		
+			switch(tile.orientation % 2){
+				//north-south
+				case 0:
+					var topLeftBoardCell = board[currentCell.col][currentCell.row];
+					var bottomRightBoardCell = board[currentCell.col][currentCell.row+1];
+					break;
+				case 1:
+				//west-east
+					var topLeftBoardCell = board[currentCell.col][currentCell.row];
+					var bottomRightBoardCell = board[currentCell.col+1][currentCell.row];
+					break;
+			}
+			topLeftBoardCell.state="domino";
+			topLeftBoardCell.value=values.topLeft;
+			bottomRightBoardCell.state="domino";
+			bottomRightBoardCell.value=values.bottomRight;
 			//update tiles
-			tiles[k].isDraggable = false;
-			tiles[k].top = y;
-			tiles[k].left = x;
+			tile.isDraggable = false;
+			tile.top = y;
+			tile.left = x;
 
 			//add another tile
 			let tileCount = tiles.length;
 			tiles.push(this.addTile(i,tileCount));
+
+			//store changes
+			this.storeData(board,tiles);
+			this.setState({board:board,currentInd:i,currentX:x,currentY:y,tiles:tiles});
+
 		}else{
 			// console.log("ruling error:",topValue,tiles[k]['topValue'],bottomValue,tiles[k]['bottomValue']);
 		}
 			
-		//TODO: check errors
-		this.storeData(currentBoard,tiles);
-		
-		//TODO: should happen only if move was legal?
-		this.setState({board:currentBoard,currentInd:i,currentX:x,currentY:y,tiles:tiles});
 		this.renderTiles();
 		return legal;
 	}
@@ -287,7 +364,6 @@ export default class GameView extends Component {
 						<Text>Grid size:{GRID_SIZE}</Text>
 						<Text>Values for {this.state.currentInd}:</Text>
 						<Text>{Math.round(this.state.currentX)},{Math.round(this.state.currentY)}</Text>
-						<Text>Current Cell: {this.getCurrentCell()}</Text>
 						<Button title="RESET" onPress={()=>{this.resetBoard()}} />
 					</View>
 				</View>
