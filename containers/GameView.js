@@ -112,8 +112,8 @@ export default class GameView extends Component {
 		let boardTopValue = topCell.value;
 		let boardBottomValue = bottomCell.value;
 
-		let topValue = tiles[k]['valueTop'];
-		let bottomValue = tiles[k]['valueBottom'];
+		let topValue = tiles[k]['topValue'];
+		let bottomValue = tiles[k]['bottomValue'];
 
 		//top value doesn't match
 		if (boardTopValue !== 0 && boardTopValue !== topValue) return false;
@@ -162,12 +162,12 @@ export default class GameView extends Component {
 		let legal = this.isDropLegal(i,k,x,y);
 
 		if (legal){
-			// console.log("ruling is ok:",topValue,tiles[i]['valueTop'],bottomValue,tiles[i]['valueBottom']);
+			// console.log("ruling is ok:",topValue,tiles[i]['topValue'],bottomValue,tiles[i]['bottomValue']);
 			//update board
 			topCell.state="domino";
-			topCell.value=tiles[k]['valueTop'];
+			topCell.value=tiles[k]['topValue'];
 			bottomCell.state="domino";
-			bottomCell.value=tiles[k]['valueBottom'];
+			bottomCell.value=tiles[k]['bottomValue'];
 			//update tiles
 			tiles[k].isDraggable = false;
 			tiles[k].top = y;
@@ -177,7 +177,7 @@ export default class GameView extends Component {
 			let tileCount = tiles.length;
 			tiles.push(this.addTile(i,tileCount));
 		}else{
-			// console.log("ruling error:",topValue,tiles[k]['valueTop'],bottomValue,tiles[k]['valueBottom']);
+			// console.log("ruling error:",topValue,tiles[k]['topValue'],bottomValue,tiles[k]['bottomValue']);
 		}
 			
 		//TODO: check errors
@@ -217,9 +217,10 @@ export default class GameView extends Component {
 					id={this.state.tiles[i].key}
 					onChange={this.updateTiles}
 					isDraggable={this.state.tiles[i].isDraggable}
-					valueTop={this.state.tiles[i].valueTop}
-					valueBottom={this.state.tiles[i].valueBottom}
-					onPress={()=>{console.log("pressed!")}}
+					topValue={this.state.tiles[i].topValue}
+					bottomValue={this.state.tiles[i].bottomValue}
+					onPress={()=>{this.flipTile(this.state.tiles[i].key)}}
+					orientation={this.state.tiles[i].orientation}
 				/>
 			);
 
@@ -232,26 +233,43 @@ export default class GameView extends Component {
 		);
 	}
 
+	flipTile(key){
+		let tiles = this.state.tiles;
+		tiles[key].orientation = (tiles[key].orientation + 1) % 4;
+		this.storeData(null,tiles);
+		this.setState({tiles:tiles});
+	}
+
 	async storeData(board,tiles){
-		const response = await AsyncStorage.multiSet(
-			[['@thirtysix:board',JSON.stringify(board)],
-			['@thirtysix:tiles',JSON.stringify(tiles)]]
-		);
+		let response = null;
+		if (board && tiles){
+			response = await AsyncStorage.multiSet(
+				[['@thirtysix:board',JSON.stringify(board)],
+				['@thirtysix:tiles',JSON.stringify(tiles)]]
+			);
+		}else if (board){
+			response = await AsyncStorage.setItem('@thirtysix:board',JSON.stringify(board));
+		}else if (tiles){
+			response = await AsyncStorage.setItem('@thirtysix:tiles',JSON.stringify(tiles));
+		}else{
+			console.log("store error");
+		}
 		return response;
 	}
 
 	addTile(index,key){
-		let randomValueTop = this.generateRandomValue();
-		let randomValueBottom = this.generateRandomValue();
+		let randomtopValue = this.generateRandomValue();
+		let randombottomValue = this.generateRandomValue();
 
 		let tile={
 			isDraggable:true,
 			top:TILES_TOP,
-			left:10 + (cell_dim+5)*index,
-			valueTop:randomValueTop,
-			valueBottom:randomValueBottom,
+			left:10 + (cell_dim*2+5)*index,
+			topValue:randomtopValue,
+			bottomValue:randombottomValue,
 			key:key,
-			index:index
+			index:index,
+			orientation:0,
 		};
 
 		return tile;

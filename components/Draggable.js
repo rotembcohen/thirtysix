@@ -36,6 +36,25 @@ export default class Draggable extends Component {
       backgroundColor: dragging ? 'rgba(125,125,125,0.3)' : 'rgba(0,0,0,0)',
       top: initialTop + offsetTop,
       left: initialLeft + offsetLeft,
+      width: (this.props.orientation % 2 === 0) ? cell_dim : cell_dim * 2,
+      height: (this.props.orientation % 2 === 0) ? cell_dim * 2 : cell_dim, 
+    }
+
+    //rotation handling
+    //by clockwise rotation -> points N, then E, S, W and N again
+    switch(this.props.orientation){
+      case 0:
+        var tileText = "T:" + this.props.topValue + "\nB:" + this.props.bottomValue;
+        break;
+      case 1:
+        var tileText = "L:" + this.props.bottomValue + "  R:" + this.props.topValue;
+        break;
+      case 2:
+        var tileText = "T:" + this.props.bottomValue + "\nB:" + this.props.topValue;
+        break;
+      case 3:
+        var tileText = "L:" + this.props.topValue + "  R:" + this.props.bottomValue;
+        break;
     }
 
     return (
@@ -47,8 +66,7 @@ export default class Draggable extends Component {
         >
           <TouchableOpacity onPress={this.props.onPress}>
             <Text style={styles.text}>
-              top:{this.props.valueTop} {"\n"}
-              Bottom:{this.props.valueBottom}
+              {tileText}
             </Text>
           </TouchableOpacity>
         </View>
