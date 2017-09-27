@@ -134,7 +134,7 @@ export default class GameView extends Component {
 			tiles.push(this.addTile(i,tileCount));
 			legal = true;
 		}else{
-			console.log("ruling error:",topValue,tiles[k]['valueTop'],bottomValue,tiles[k]['valueBottom']);
+			// console.log("ruling error:",topValue,tiles[k]['valueTop'],bottomValue,tiles[k]['valueBottom']);
 		}
 			
 		//TODO: check errors
