@@ -81,19 +81,10 @@ export default class GameView extends Component {
 	}
 
 	createTiles(){
+		//when board is reset
 		var tiles = [];
 		for (let i=0;i<INITIAL_TILES;i++){
-			//generate tile domino values
-			let randomValueTop = this.generateRandomValue();
-			let randomValueBottom = this.generateRandomValue();
-
-			tiles[i]={
-				isDraggable:true,
-				top:TILES_TOP,
-				left:10 + (cell_dim+5)*i,
-				valueTop:randomValueTop,
-				valueBottom:randomValueBottom,
-			}
+			tiles[i]=this.addTile(i,i);
 		}
 		return tiles;
 	}
@@ -105,7 +96,7 @@ export default class GameView extends Component {
 		return row +','+ col;
 	}
 
-	updateTiles=(i,x,y)=>{
+	updateTiles=(i,k,x,y)=>{
 		let currentRow = Math.round((y - BOARD_TOP) / cell_dim);
 		let currentCol = Math.round(x / cell_dim);
 		let currentBoard = this.state.board;
@@ -123,30 +114,35 @@ export default class GameView extends Component {
 		//this function assumes that we check the whole tile was placed on the board
 		//before calling it
 		if (
-			(topValue === 0 || topValue === tiles[i]['valueTop'])
+			(topValue === 0 || topValue === tiles[k]['valueTop'])
 				&&
-			(bottomValue === 0 || bottomValue === tiles[i]['valueBottom'])
+			(bottomValue === 0 || bottomValue === tiles[k]['valueBottom'])
 			){
 			// console.log("ruling is ok:",topValue,tiles[i]['valueTop'],bottomValue,tiles[i]['valueBottom']);
 			//update board
 			topCell.state="domino";
-			topCell.value=tiles[i]['valueTop'];
+			topCell.value=tiles[k]['valueTop'];
 			bottomCell.state="domino";
-			bottomCell.value=tiles[i]['valueBottom'];
+			bottomCell.value=tiles[k]['valueBottom'];
 			//update tiles
-			tiles[i].isDraggable = false;
-			tiles[i].top = y;
-			tiles[i].left = x;
+			tiles[k].isDraggable = false;
+			tiles[k].top = y;
+			tiles[k].left = x;
+
+			//add another tile
+			let tileCount = tiles.length;
+			tiles.push(this.addTile(i,tileCount));
 			legal = true;
 		}else{
-			// console.log("ruling error:",topValue,tiles[i]['valueTop'],bottomValue,tiles[i]['valueBottom']);
+			console.log("ruling error:",topValue,tiles[k]['valueTop'],bottomValue,tiles[k]['valueBottom']);
 		}
 			
 		//TODO: check errors
-		this.storeData(board,tiles);
+		this.storeData(currentBoard,tiles);
 		
 		//TODO: should happen only if move was legal?
 		this.setState({board:currentBoard,currentInd:i,currentX:x,currentY:y,tiles:tiles});
+		this.renderTiles();
 		return legal;
 	}
 
@@ -165,20 +161,23 @@ export default class GameView extends Component {
 
 	renderTiles(){
 		let renderedTiles = [];	
-		for (let i=0; i < INITIAL_TILES; i++){
+
+		for (let i=0; i < this.state.tiles.length; i++){
 
 			//create tile
 			renderedTiles.push(
 				<Draggable 
 					left={this.state.tiles[i].left}
 					top={this.state.tiles[i].top}
-					index={i} key={i}
+					index={this.state.tiles[i].index}
+					key={this.state.tiles[i].key}
+					id={this.state.tiles[i].key}
 					onChange={this.updateTiles}
 					isDraggable={this.state.tiles[i].isDraggable}
 					valueTop={this.state.tiles[i].valueTop}
 					valueBottom={this.state.tiles[i].valueBottom}
 				/>
-			);
+			)
 		}
 	
 		return (
@@ -194,6 +193,24 @@ export default class GameView extends Component {
 			['@thirtysix:tiles',JSON.stringify(tiles)]]
 		);
 		return response;
+	}
+
+	addTile(index,key){
+		let randomValueTop = this.generateRandomValue();
+		let randomValueBottom = this.generateRandomValue();
+
+		let tile={
+			isDraggable:true,
+			top:TILES_TOP,
+			left:10 + (cell_dim+5)*index,
+			valueTop:randomValueTop,
+			valueBottom:randomValueBottom,
+			key:key,
+			index:index
+		};
+
+		return tile;
+
 	}
 
 	render() {
