@@ -97,6 +97,58 @@ export default class GameView extends Component {
 		return row +','+ col;
 	}
 
+	isDropLegal(i,k,x,y){
+	
+		//this function assumes that we check the whole tile was placed on the board
+		//before calling it
+		
+		let currentRow = Math.round((y - BOARD_TOP) / cell_dim);
+		let currentCol = Math.round(x / cell_dim);
+		let currentBoard = this.state.board;
+		let tiles = this.state.tiles;
+
+		let topCell = currentBoard[currentCol][currentRow];
+		let bottomCell = currentBoard[currentCol][currentRow+1];
+		let boardTopValue = topCell.value;
+		let boardBottomValue = bottomCell.value;
+
+		let topValue = tiles[k]['valueTop'];
+		let bottomValue = tiles[k]['valueBottom'];
+
+		//top value doesn't match
+		if (boardTopValue !== 0 && boardTopValue !== topValue) return false;
+
+		//bottom value doesn't match
+		if (boardBottomValue !== 0 && boardBottomValue !== bottomValue) return false;
+
+		//adjacent dominos for topValue
+		//top
+		if (this.checkAdjucentCell(currentRow-1,currentCol,topValue) === false) return false;
+		//left
+		if (this.checkAdjucentCell(currentRow,currentCol-1,topValue) === false) return false;
+		//right
+		if (this.checkAdjucentCell(currentRow,currentCol+1,topValue) === false) return false;
+		
+		//adjacent dominos for topValue
+		//bottom 
+		if (this.checkAdjucentCell(currentRow+2,currentCol,bottomValue) === false) return false;
+		//left
+		if (this.checkAdjucentCell(currentRow+1,currentCol-1,bottomValue) === false) return false;
+		//right
+		if (this.checkAdjucentCell(currentRow+1,currentCol+1,bottomValue) === false) return false;
+
+		//all checks passed, tile can be placed
+		return true;
+
+	}
+
+	checkAdjucentCell(cell_row,cell_col,value){
+		let board = this.state.board;
+		let adjacentCell = (cell_row >= 0 && cell_col >= 0 && cell_row < GRID_SIZE && cell_col < GRID_SIZE) ? board[cell_col][cell_row] : null;
+		let adjacentValue = (adjacentCell && adjacentCell.state==='domino') ? adjacentCell.value : -1;
+		return (adjacentValue <= 0 || adjacentValue === value);
+	}
+
 	updateTiles=(i,k,x,y)=>{
 		let currentRow = Math.round((y - BOARD_TOP) / cell_dim);
 		let currentCol = Math.round(x / cell_dim);
@@ -105,20 +157,11 @@ export default class GameView extends Component {
 
 		let topCell = currentBoard[currentCol][currentRow];
 		let bottomCell = currentBoard[currentCol][currentRow+1];
-		let topValue = topCell.value;
-		let bottomValue = bottomCell.value;
 		
 		//will return true iff domino can be legaly placed in grid
-		let legal = false;
+		let legal = this.isDropLegal(i,k,x,y);
 
-		//check if board and tile's values match
-		//this function assumes that we check the whole tile was placed on the board
-		//before calling it
-		if (
-			(topValue === 0 || topValue === tiles[k]['valueTop'])
-				&&
-			(bottomValue === 0 || bottomValue === tiles[k]['valueBottom'])
-			){
+		if (legal){
 			// console.log("ruling is ok:",topValue,tiles[i]['valueTop'],bottomValue,tiles[i]['valueBottom']);
 			//update board
 			topCell.state="domino";
@@ -133,7 +176,6 @@ export default class GameView extends Component {
 			//add another tile
 			let tileCount = tiles.length;
 			tiles.push(this.addTile(i,tileCount));
-			legal = true;
 		}else{
 			// console.log("ruling error:",topValue,tiles[k]['valueTop'],bottomValue,tiles[k]['valueBottom']);
 		}

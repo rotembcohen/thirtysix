@@ -3,8 +3,9 @@ import {
 	StyleSheet, Dimensions
 } from 'react-native';
 
-
+//should not be smaller than 4
 GRID_SIZE = 7;
+
 const {height, width} = Dimensions.get('window');
 cell_dim = Math.floor(width/GRID_SIZE);
 BOARD_TOP = -407;
