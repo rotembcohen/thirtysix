@@ -67,8 +67,9 @@ export default class GameView extends Component {
 		for (let i=0; i < GRID_SIZE; i++){
 			var row = [];
 			for(let j=0; j < GRID_SIZE; j++){
-				let value = (i===0 || j===0 || i===(GRID_SIZE-1) || j===(GRID_SIZE-1)) ? this.generateRandomValue() : 0;
-				let state = (i===0 || j===0 || i===(GRID_SIZE-1) || j===(GRID_SIZE-1)) ? 'grey' : 'init';
+				//only top and bottom rows:
+				let value = (j===0 || j===(GRID_SIZE-1)) ? this.generateRandomValue() : 0;
+				let state = (j===0 || j===(GRID_SIZE-1)) ? 'grey' : 'init';
 				row[j] = {value:value,state:state};
 			}
 			board[i] = row;
