@@ -219,8 +219,10 @@ export default class GameView extends Component {
 					isDraggable={this.state.tiles[i].isDraggable}
 					valueTop={this.state.tiles[i].valueTop}
 					valueBottom={this.state.tiles[i].valueBottom}
+					onPress={()=>{console.log("pressed!")}}
 				/>
-			)
+			);
+
 		}
 	
 		return (

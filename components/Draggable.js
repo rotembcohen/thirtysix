@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { StyleSheet, View, Text, PanResponder } from 'react-native'
+import { StyleSheet, View, Text, PanResponder, TouchableOpacity } from 'react-native'
 
 import {cell_dim,BOARD_TOP,BOARD_LEFT,GRID_SIZE,MIDDLE_MARGIN} from '../Styles';
 
@@ -45,10 +45,12 @@ export default class Draggable extends Component {
           {...this.panResponder.panHandlers}
           style={[styles.square, style]}
         >
-          <Text style={styles.text}>
-            top:{this.props.valueTop} {"\n"}
-            Bottom:{this.props.valueBottom}
-          </Text>
+          <TouchableOpacity onPress={this.props.onPress}>
+            <Text style={styles.text}>
+              top:{this.props.valueTop} {"\n"}
+              Bottom:{this.props.valueBottom}
+            </Text>
+          </TouchableOpacity>
         </View>
       
     )

@@ -11,7 +11,7 @@ cell_dim = Math.floor(width/GRID_SIZE);
 BOARD_TOP = -407;
 BOARD_LEFT = 4;
 TILES_TOP = 0;
-INITIAL_TILES = 6;
+INITIAL_TILES = 4;
 MIDDLE_MARGIN = 0.33;
 
 const styles = StyleSheet.create({
@@ -20,6 +20,9 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		alignItems: 'center',
 		justifyContent: 'flex-start',
+	},
+	row:{
+		flexDirection:'row',
 	},
 	textHeader:{
 		fontSize:24,
