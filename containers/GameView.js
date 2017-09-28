@@ -74,7 +74,7 @@ export default class GameView extends Component {
 				let edge = 'none';
 				if (j===0) edge = 'top';
 				if (j===(GRID_SIZE-1)) edge = 'bottom';
-				row[j] = {value:value,state:state,edge:edge};
+				row[j] = {value:value,state:state,edge:edge,marked:false};
 			}
 			board[i] = row;
 		}
@@ -261,7 +261,10 @@ export default class GameView extends Component {
 			this.storeData(board,tiles);
 			this.setState({board:board,currentInd:i,currentX:x,currentY:y,tiles:tiles});
 			this.renderTiles();
-			// this.checkWin();
+			
+			this.checkWin();
+			// console.log("win:",win);
+
 		}else{
 			// console.log("ruling error:",topLeftBoardCell.value,values.topLeft,bottomRightBoardCell.value,values.bottomRight);
 		}
@@ -270,37 +273,75 @@ export default class GameView extends Component {
 		return legal;
 	}
 
-	// checkWin(){
-	// 	//search the grid (as a tree) going from top to bottom and left to right
-	// 	//for a connection from one edge to the other
-	// 	let board = this.state.board;
-	// 	let i = 0;
-	// 	let win = false;
-	// 	while (win === false && i < GRID_SIZE){
-	// 		let initCell = board[i][0]; //top row
-	// 		if (initCell.state === 'domino'){
-	// 			let initBottom = board[i][1];
-	// 			win = this.checkWinStep(i,1);
-	// 		}
-	// 		i = i + 1;
-	// 	}
-	// 	return win;
-	// }
+	clearMarked(win){
+		let board = this.state.board;
+		for (i=0;i<GRID_SIZE;i++){
+			for (j=0;j<GRID_SIZE;j++){
+				if (board[i][j].marked && win){
+					board[i][j].state = 'init';
+					board[i][j].value = 0;
+				}
+				board[i][j].marked = false;
+			}
+		}
+		this.setState({board:board});
+		//if win, need to store date
+		if (win) this.storeData(board,null);
+	}
 
-	// checkWinStep(cell_col,cell_row){
-	// 	let board = this.state.board;
-	// 	let currentCell = board[cell_col,cell_row];
-	// 	if (currentCell.edge === 'bottom' && currentCell.state === 'domino'){
-	// 		//win condition
-	// 		return true;
-	// 	}else if (currentCell.state === 'domino'){
-	// 		//continue another step
-	// 		return (checkWinStep(cell_col+1,cell_row) || checkWinStep(cell_col,cell_row+1));
-	// 	}else{
-	// 		//dead end
-	// 		return false;
-	// 	}
-	// }
+	checkWin(){
+		//search the grid (as a tree) going from top to bottom and left to right
+		//for a connection from one edge to the other
+		let board = this.state.board;
+		let i = 0;
+		let win = false;
+		while (win === false && i < GRID_SIZE){
+			let initCell = board[i][0]; //top row
+			if (initCell.state === 'domino'){
+				let initBottom = board[i][1];
+				initCell.marked = true;
+				this.setState({board:board});
+				win = this.checkWinStep(i,1);
+				//console.log("worked?",this.state.board[i][0].marked);
+			}
+			this.clearMarked(win);
+			i = i + 1;
+		}
+		return win;
+	}
+
+	checkWinStep(cell_col,cell_row){
+		if (cell_col < 0 || cell_col >= GRID_SIZE) return false;
+		if (cell_row < 0 || cell_row >= GRID_SIZE) return false;
+
+		let board = this.state.board;
+		let currentCell = board[cell_col][cell_row];
+		
+		//if no tile in cell, break
+		if (currentCell.state !== 'domino') return false;
+		
+		//if already visited, break
+		if (currentCell.marked) return false;
+
+		//now mark as visited
+		currentCell.marked=true;
+		this.setState({board:board});
+
+		if (currentCell.edge === 'bottom'){
+			//win condition
+			return true;
+		}else if (currentCell.state === 'domino'){
+			//continue another step in all directions
+			return (this.checkWinStep(cell_col+1,cell_row)
+				|| this.checkWinStep(cell_col,cell_row+1)
+				|| this.checkWinStep(cell_col-1,cell_row)
+				|| this.checkWinStep(cell_col,cell_row-1)
+				);
+		}else{
+			//dead end
+			return false;
+		}
+	}
 
 	async resetBoard(){
 		this.setState({boardLoaded:false});
