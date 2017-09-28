@@ -290,20 +290,19 @@ export default class GameView extends Component {
 	}
 
 	checkWin(){
-		//search the grid (as a tree) going from top to bottom and left to right
+		//search the grid (as a tree) starting from top and continuing in all directions
 		//for a connection from one edge to the other
 		let board = this.state.board;
 		let i = 0;
 		let win = false;
 		while (win === false && i < GRID_SIZE){
-			let initCell = board[i][0]; //top row
-			if (initCell.state === 'domino'){
-				let initBottom = board[i][1];
-				initCell.marked = true;
-				this.setState({board:board});
-				win = this.checkWinStep(i,1);
-				//console.log("worked?",this.state.board[i][0].marked);
-			}
+			
+			//start from top row
+			let initCell = board[i][0];
+			win = this.checkWinStep(i,1);
+			//console.log("worked?",this.state.board[i][0].marked);
+			
+			//clear markings, and if win is true, clear all connected cells
 			this.clearMarked(win);
 			i = i + 1;
 		}
@@ -332,11 +331,14 @@ export default class GameView extends Component {
 			return true;
 		}else if (currentCell.state === 'domino'){
 			//continue another step in all directions
-			return (this.checkWinStep(cell_col+1,cell_row)
-				|| this.checkWinStep(cell_col,cell_row+1)
-				|| this.checkWinStep(cell_col-1,cell_row)
-				|| this.checkWinStep(cell_col,cell_row-1)
-				);
+			//we perform all steps in order to mark all connected cells
+			let step1 = this.checkWinStep(cell_col+1,cell_row);
+			let step2 = this.checkWinStep(cell_col,cell_row+1);
+			let step3 = this.checkWinStep(cell_col-1,cell_row);
+			let step4 = this.checkWinStep(cell_col,cell_row-1);
+			
+			//if at least one of them reached bottom - return true
+			return step1 || step2 || step3 || step4;
 		}else{
 			//dead end
 			return false;
