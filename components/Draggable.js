@@ -109,6 +109,7 @@ export default class Draggable extends Component {
       newLeft = response['col']*cell_dim + BOARD_LEFT;
       let onChange = this.props.onChange;
       shouldMove = onChange(this.props.index,this.props.id,newLeft,newTop);
+      // console.log("shouldMove:",shouldMove);
     }
     
     //move is not legal,reset tile placement

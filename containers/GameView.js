@@ -20,6 +20,7 @@ export default class GameView extends Component {
 			currentX: null,
 			currentY: null,
 			boardLoaded:false,
+			win: false,
 		}
 	}
 
@@ -70,7 +71,10 @@ export default class GameView extends Component {
 				//only top and bottom rows:
 				let value = (j===0 || j===(GRID_SIZE-1)) ? this.generateRandomValue() : 0;
 				let state = (j===0 || j===(GRID_SIZE-1)) ? 'grey' : 'init';
-				row[j] = {value:value,state:state};
+				let edge = 'none';
+				if (j===0) edge = 'top';
+				if (j===(GRID_SIZE-1)) edge = 'bottom';
+				row[j] = {value:value,state:state,edge:edge};
 			}
 			board[i] = row;
 		}
@@ -257,6 +261,7 @@ export default class GameView extends Component {
 			this.storeData(board,tiles);
 			this.setState({board:board,currentInd:i,currentX:x,currentY:y,tiles:tiles});
 			this.renderTiles();
+			// this.checkWin();
 		}else{
 			// console.log("ruling error:",topLeftBoardCell.value,values.topLeft,bottomRightBoardCell.value,values.bottomRight);
 		}
@@ -264,6 +269,38 @@ export default class GameView extends Component {
 		
 		return legal;
 	}
+
+	// checkWin(){
+	// 	//search the grid (as a tree) going from top to bottom and left to right
+	// 	//for a connection from one edge to the other
+	// 	let board = this.state.board;
+	// 	let i = 0;
+	// 	let win = false;
+	// 	while (win === false && i < GRID_SIZE){
+	// 		let initCell = board[i][0]; //top row
+	// 		if (initCell.state === 'domino'){
+	// 			let initBottom = board[i][1];
+	// 			win = this.checkWinStep(i,1);
+	// 		}
+	// 		i = i + 1;
+	// 	}
+	// 	return win;
+	// }
+
+	// checkWinStep(cell_col,cell_row){
+	// 	let board = this.state.board;
+	// 	let currentCell = board[cell_col,cell_row];
+	// 	if (currentCell.edge === 'bottom' && currentCell.state === 'domino'){
+	// 		//win condition
+	// 		return true;
+	// 	}else if (currentCell.state === 'domino'){
+	// 		//continue another step
+	// 		return (checkWinStep(cell_col+1,cell_row) || checkWinStep(cell_col,cell_row+1));
+	// 	}else{
+	// 		//dead end
+	// 		return false;
+	// 	}
+	// }
 
 	async resetBoard(){
 		this.setState({boardLoaded:false});
