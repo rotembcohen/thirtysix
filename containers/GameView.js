@@ -24,6 +24,8 @@ export default class GameView extends Component {
 			currentY: null,
 			boardLoaded:false,
 			win: false,
+			score: null,
+			bestScore: null,
 		}
 	}
 
@@ -33,9 +35,16 @@ export default class GameView extends Component {
 		var board = null;
 		var tiles = null;
 		
-		let data = await AsyncStorage.multiGet(['@thirtysix:board','@thirtysix:tiles']);
+		let data = await AsyncStorage.multiGet([
+			'@thirtysix:board',
+			'@thirtysix:tiles',
+			'@thirtysix:currentScore',
+			'@thirtysix:bestScore'
+			]);
 		let boardJson = data[0][1];
 		let tilesJson = data[1][1];
+		let currentScore = (data[2][1]) ? (Number(data[2][1])) : 0;
+		let bestScore = (data[3][1]) ? (Number(data[3][1])) : 0;
 
 		if (boardJson === null || tilesJson === null){
 			let response = await this.createBoard();
@@ -55,6 +64,8 @@ export default class GameView extends Component {
 			board:board,
 			tiles:tiles,
 			boardLoaded:true,
+			score: currentScore,
+			bestScore: bestScore,
 		});
 	}
 
@@ -66,7 +77,7 @@ export default class GameView extends Component {
 		board = this.createBoardValues();
 		tiles = this.createTiles();
 		//TODO: check errors
-		this.storeData(board,tiles);
+		this.storeData({board:board,tiles:tiles,score:0});
 		return {board:board,tiles:tiles};
 	}
 
@@ -126,6 +137,12 @@ export default class GameView extends Component {
 	}
 
 	async resetBoard(){
+		let bestScore = this.state.bestScore;
+		let currentScore = this.state.score;
+		if (currentScore > bestScore){
+			let resp = await AsyncStorage.setItem('@thirtysix:bestScore',currentScore.toString());
+			bestScore = currentScore;
+		}
 		this.setState({boardLoaded:false});
 		let response = await this.createBoard();
 		board = response['board'];
@@ -135,6 +152,8 @@ export default class GameView extends Component {
 			board:board,
 			tiles:tiles,
 			boardLoaded:true,
+			bestScore:bestScore,
+			score:0,
 		});
 	}
 
@@ -307,7 +326,11 @@ export default class GameView extends Component {
 			let tileCount = tiles.length;
 			tiles.push(this.addTile(i,tileCount));
 
-			this.setState({board:board,currentInd:i,currentX:x,currentY:y,tiles:tiles});
+			//update score:
+			let score = this.state.score + values.topLeft + values.bottomRight;
+			
+			this.setState({board:board,currentInd:i,currentX:x,currentY:y,tiles:tiles,score:score});
+			
 			this.renderTiles();
 			
 			this.checkWin();
@@ -316,9 +339,9 @@ export default class GameView extends Component {
 			//mark adjacent cells with the possible connecting options
 			this.generateHelperCells(topLeftBoardCell);
 			this.generateHelperCells(bottomRightBoardCell);
-
+			
 			//store changes
-			this.storeData(board,tiles);
+			this.storeData({board:board,tiles:tiles,score:score});
 
 		}else{
 			// console.log("ruling error:",topLeftBoardCell.value,values.topLeft,bottomRightBoardCell.value,values.bottomRight);
@@ -480,15 +503,24 @@ export default class GameView extends Component {
 	          UTILITY FUNCTIONS
 	****************************************/
 
-	async storeData(board,tiles){
+	async storeData(data){
 		let response = null;
+
+		let board = (data.board === undefined) ? null : data.board;
+		let tiles = (data.tiles === undefined) ? null : data.tiles;
+		let score = (data.score === undefined) ? null : data.score;
+
 		if (board && tiles){
-			response = await AsyncStorage.multiSet(
-				[['@thirtysix:board',JSON.stringify(board)],
-				['@thirtysix:tiles',JSON.stringify(tiles)]]
-			);
+			response = await AsyncStorage.multiSet([
+				['@thirtysix:board',JSON.stringify(board)],
+				['@thirtysix:tiles',JSON.stringify(tiles)],
+				['@thirtysix:currentScore',score.toString()]
+			]);
 		}else if (board){
-			response = await AsyncStorage.setItem('@thirtysix:board',JSON.stringify(board));
+			response = await AsyncStorage.multiSet([
+				['@thirtysix:board',JSON.stringify(board)],
+				['@thirtysix:currentScore',score.toString()]
+			]);
 		}else if (tiles){
 			response = await AsyncStorage.setItem('@thirtysix:tiles',JSON.stringify(tiles));
 		}else{
@@ -535,7 +567,7 @@ export default class GameView extends Component {
 	flipTile(key){
 		let tiles = this.state.tiles;
 		tiles[key].orientation = (tiles[key].orientation + 1) % 4;
-		this.storeData(null,tiles);
+		this.storeData({tiles:tiles});
 		this.setState({tiles:tiles});
 	}
 
@@ -547,9 +579,8 @@ export default class GameView extends Component {
 					<Board data={this.state.board} />
 					{this.renderTiles()}
 					<View>
-						<Text>Grid size:{GRID_SIZE}</Text>
-						<Text>Values for {this.state.currentInd}:</Text>
-						<Text>{Math.round(this.state.currentX)},{Math.round(this.state.currentY)}</Text>
+						<Text>Score:{this.state.score}</Text>
+						<Text>Best Score:{this.state.bestScore}</Text>
 						<Button title="RESET" onPress={()=>{this.resetBoard()}} />
 					</View>
 				</View>
