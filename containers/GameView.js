@@ -448,9 +448,7 @@ export default class GameView extends Component {
 		while (win === false && i < GRID_SIZE){
 			
 			//start from top row
-			let initCell = board[i][0];
-			win = this.checkWinStep(i,1);
-			//console.log("worked?",this.state.board[i][0].marked);
+			win = this.checkWinStep(i,0);
 			
 			//clear markings, and if win is true, clear all connected cells
 			this.clearMarked(win);
