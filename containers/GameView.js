@@ -117,14 +117,16 @@ export default class GameView extends Component {
 		let col = currentCol;
 		let value = values.topLeft;
 		if (!this.matchTileBoard(row,col,value)) return false;
-		if (!this.matchAdjacent(row,col,value,orientation)) return false;
+		if (!this.matchAdjacent(row,col,value,orientation % 2)) return false;
 
 		//bottom or right:
 		row = (orientation % 2 === 0) ? currentRow + 1 : currentRow;
 		col = (orientation % 2 === 0) ? currentCol : currentCol + 1;
 		value = values.bottomRight;
+		//if we checked top, now check bottom, left then right
+		let negativeOrientation = (orientation % 2) + 2;
 		if (!this.matchTileBoard(row,col,value)) return false;
-		if (!this.matchAdjacent(row,col,value,orientation)) return false;
+		if (!this.matchAdjacent(row,col,value,negativeOrientation)) return false;
 
 		//all checks passed, tile can be placed
 		return true;
@@ -151,7 +153,7 @@ export default class GameView extends Component {
 			case 1:
 				cellsToCheck.push(cellToTheSouth);
 				cellsToCheck.push(cellToTheNorth);
-				cellsToCheck.push(cellToTheEast);
+				cellsToCheck.push(cellToTheWest);
 				break;
 			//check south
 			case 2:
@@ -161,14 +163,14 @@ export default class GameView extends Component {
 				break;
 			//check east
 			case 3:
-				cellsToCheck.push(cellToTheWest);
+				cellsToCheck.push(cellToTheEast);
 				cellsToCheck.push(cellToTheNorth);
 				cellsToCheck.push(cellToTheSouth);
 				break;
 		}
 		
 		for (let i=0;i<cellsToCheck.length;i++){
-			if (this.matchTileBoard(cellsToCheck[i].row,cellsToCheck[i].col,value) === false) return false;	
+			if (this.matchTileBoard(cellsToCheck[i].row,cellsToCheck[i].col,value) === false) return false;
 		}
 		
 		return true;
@@ -195,6 +197,7 @@ export default class GameView extends Component {
 		let currentCol = currentCell.col;
 		let board = this.state.board;
 		let tiles = this.state.tiles;
+		let tile = tiles[k];
 
 		let orientation = tiles[k].orientation;
 
@@ -202,19 +205,19 @@ export default class GameView extends Component {
 		switch(orientation){
 			case 0:
 				//top:top, bottom:bottom
-				var values = {topLeft:tiles[k].topValue,bottomRight:tiles[k].bottomValue};
+				var values = {topLeft:tile.topValue,bottomRight:tile.bottomValue};
 				break;
 			case 1:
 				//left:bottom, right:top
-				var values = {topLeft:tiles[k].bottomValue,bottomRight:tiles[k].topValue};
+				var values = {topLeft:tile.bottomValue,bottomRight:tile.topValue};
 				break;
 			case 2:
 				//top:bottom, bottom:top
-				var values = {topLeft:tiles[k].bottomValue,bottomRight:tiles[k].topValue};
+				var values = {topLeft:tile.bottomValue,bottomRight:tile.topValue};
 				break;
 			case 3:
 				//left:top, right:bottom
-				var values = {topLeft:tiles[k].topValue,bottomRight:tiles[k].bottomValue};
+				var values = {topLeft:tile.topValue,bottomRight:tile.bottomValue};
 				break;
 		}
 
@@ -222,13 +225,7 @@ export default class GameView extends Component {
 		let legal = this.isDropLegal(i,k,x,y,values);
 
 		if (legal){
-			// console.log("ruling is ok:",topValue,tiles[i]['topValue'],bottomValue,tiles[i]['bottomValue']);
 			//update board
-			let currentCell = this.getCurrentCell(x,y);
-			let board = this.state.board;
-			let tiles = this.state.tiles;
-			let tile = tiles[k];
-		
 			switch(tile.orientation % 2){
 				//north-south
 				case 0:
@@ -241,6 +238,8 @@ export default class GameView extends Component {
 					var bottomRightBoardCell = board[currentCell.col+1][currentCell.row];
 					break;
 			}
+			// console.log("ruling is ok:",topLeftBoardCell.value,values.topLeft,bottomRightBoardCell.value,values.bottomRight);
+			
 			topLeftBoardCell.state="domino";
 			topLeftBoardCell.value=values.topLeft;
 			bottomRightBoardCell.state="domino";
@@ -257,12 +256,12 @@ export default class GameView extends Component {
 			//store changes
 			this.storeData(board,tiles);
 			this.setState({board:board,currentInd:i,currentX:x,currentY:y,tiles:tiles});
-
+			this.renderTiles();
 		}else{
-			// console.log("ruling error:",topValue,tiles[k]['topValue'],bottomValue,tiles[k]['bottomValue']);
+			// console.log("ruling error:",topLeftBoardCell.value,values.topLeft,bottomRightBoardCell.value,values.bottomRight);
 		}
 			
-		this.renderTiles();
+		
 		return legal;
 	}
 
