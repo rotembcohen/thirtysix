@@ -16,7 +16,7 @@ export default class Board extends Component {
 			style = styles.cell_domino;
 		}
 
-		return (<Text style={style}>{cell.value}</Text>);
+		return (<Text style={style}>{(cell.state==='domino')?cell.value:cell.possible}</Text>);
 	}
 
 	createBoard(){

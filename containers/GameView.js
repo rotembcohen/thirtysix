@@ -81,7 +81,12 @@ export default class GameView extends Component {
 				let edge = 'none';
 				if (j===0) edge = 'top';
 				if (j===(GRID_SIZE-1)) edge = 'bottom';
-				row[j] = {value:value,state:state,edge:edge,marked:false};
+				//value - domino value (1-6)
+				//state - init - empty, grey - special, domino - has tile
+				//marked - to be use when determining win and other temp stuff
+				//possible - for helper cells
+				let possible = (j===0 || j===(GRID_SIZE-1)) ? value : null;
+				row[j] = {value:value,state:state,edge:edge,marked:false,possible:possible,row:j,col:i};
 			}
 			board[i] = row;
 		}
@@ -302,13 +307,18 @@ export default class GameView extends Component {
 			let tileCount = tiles.length;
 			tiles.push(this.addTile(i,tileCount));
 
-			//store changes
-			this.storeData(board,tiles);
 			this.setState({board:board,currentInd:i,currentX:x,currentY:y,tiles:tiles});
 			this.renderTiles();
 			
 			this.checkWin();
 			// console.log("win:",win);
+
+			//mark adjacent cells with the possible connecting options
+			this.generateHelperCells(topLeftBoardCell);
+			this.generateHelperCells(bottomRightBoardCell);
+
+			//store changes
+			this.storeData(board,tiles);
 
 		}else{
 			// console.log("ruling error:",topLeftBoardCell.value,values.topLeft,bottomRightBoardCell.value,values.bottomRight);
@@ -316,6 +326,75 @@ export default class GameView extends Component {
 			
 		
 		return legal;
+	}
+
+	/****************************************
+	          HELPER CELLS
+	****************************************/
+
+	generateHelperCells(originalCell){
+		let cell_row = originalCell.row;
+		let cell_col = originalCell.col;
+		let value = originalCell.value;
+
+		this.generateHelper(cell_row-1,cell_col,value);
+		this.generateHelper(cell_row,cell_col-1,value);
+		this.generateHelper(cell_row,cell_col+1,value);
+		this.generateHelper(cell_row+1,cell_col,value);
+
+	}
+
+	generateHelper(row,col,value){
+		if (row < 0 || row >= GRID_SIZE) return;
+		if (col < 0 || col >= GRID_SIZE) return;
+
+		let board = this.state.board;
+		let cell = board[col][row];
+
+		//can't be helper - already has domino value
+		if (cell.state === 'domino') return;
+
+		if (cell.state === 'init' || cell.state === 'grey'){
+
+			//already marked as no possible options
+			if (cell.possible === -1) return;
+
+			//already marked as current value
+			if (cell.possible === value) return;
+
+			//has different value - mark as impossible
+			if (cell.possible) {
+				cell.possible = -1;
+				
+			}else{
+				//else - mark only possible option as value
+				cell.possible = (value) ? value : null;
+			}
+			this.setState({board:board});
+		}
+
+	}
+
+	refreshHelperCells(){
+		let board = this.state.board;
+		//will store all remaining domino cells
+		let dominoCells = [];
+
+		//reset to default values
+		for (let i=0;i<GRID_SIZE;i++){
+			for (let j=0;j<GRID_SIZE;j++){
+				let cell = board[j][i];
+				if (cell.state === 'init') cell.possible = null;
+				if (cell.state === 'grey') cell.possible = cell.value;
+				if (cell.state === 'domino') dominoCells.push(cell);
+			}
+		}
+
+		//refresh possibles for adjacent cells of each domino cell
+		for (let k=0;k<dominoCells.length;k++){
+			this.generateHelperCells(dominoCells[k]);
+		}
+		this.setState({board:board});
 	}
 
 	/****************************************
@@ -335,7 +414,6 @@ export default class GameView extends Component {
 		}
 		this.setState({board:board});
 		//if win, need to store date
-		if (win) this.storeData(board,null);
 	}
 
 	checkWin(){
@@ -355,6 +433,10 @@ export default class GameView extends Component {
 			this.clearMarked(win);
 			i = i + 1;
 		}
+
+		//regenerate helper cells in case of win
+		if (win) this.refreshHelperCells();
+
 		return win;
 	}
 
