@@ -7,6 +7,9 @@ import Board from '../components/Board';
 
 export default class GameView extends Component {
 
+	/****************************************
+	          COMPONENT INIT
+	****************************************/
 	static navigationOptions = {
 		title: 'thirtysix v0.1'
 	}
@@ -55,6 +58,10 @@ export default class GameView extends Component {
 		});
 	}
 
+	/****************************************
+	          BOARD CREATION
+	****************************************/
+
 	async createBoard(){
 		board = this.createBoardValues();
 		tiles = this.createTiles();
@@ -93,6 +100,42 @@ export default class GameView extends Component {
 		}
 		return tiles;
 	}
+
+	addTile(index,key){
+		let randomtopValue = this.generateRandomValue();
+		let randombottomValue = this.generateRandomValue();
+
+		let tile={
+			isDraggable:true,
+			top:TILES_TOP,
+			left:10 + (cell_dim*2+5)*index,
+			topValue:randomtopValue,
+			bottomValue:randombottomValue,
+			key:key,
+			index:index,
+			orientation:0,
+		};
+
+		return tile;
+
+	}
+
+	async resetBoard(){
+		this.setState({boardLoaded:false});
+		let response = await this.createBoard();
+		board = response['board'];
+		tiles = response['tiles'];
+		
+		this.setState({
+			board:board,
+			tiles:tiles,
+			boardLoaded:true,
+		});
+	}
+
+	/****************************************
+	          CHECKING DOMINO DROP
+	****************************************/
 
 	getCurrentCell(currentX,currentY){
 		let offsetY = (currentY - BOARD_TOP) / cell_dim;
@@ -186,6 +229,7 @@ export default class GameView extends Component {
 		let adjacentCell = (cell_row >= 0 && cell_col >= 0 && cell_row < GRID_SIZE && cell_col < GRID_SIZE) ? board[cell_col][cell_row] : null;
 		let adjacentValue = (adjacentCell && adjacentCell.state==='domino') ? adjacentCell.value : -1;
 		let response = (adjacentValue <= 0 || adjacentValue === value);
+
 		//if (!response) console.log("check failed for row/col/value/boardValue: ",cell_row,cell_col,value,adjacentValue);
 		return response;
 	}
@@ -248,6 +292,7 @@ export default class GameView extends Component {
 			topLeftBoardCell.value=values.topLeft;
 			bottomRightBoardCell.state="domino";
 			bottomRightBoardCell.value=values.bottomRight;
+
 			//update tiles
 			tile.isDraggable = false;
 			tile.top = y;
@@ -272,6 +317,10 @@ export default class GameView extends Component {
 		
 		return legal;
 	}
+
+	/****************************************
+	          CHECKING WIN CONDITION
+	****************************************/
 
 	clearMarked(win){
 		let board = this.state.board;
@@ -345,18 +394,30 @@ export default class GameView extends Component {
 		}
 	}
 
-	async resetBoard(){
-		this.setState({boardLoaded:false});
-		let response = await this.createBoard();
-		board = response['board'];
-		tiles = response['tiles'];
-		
-		this.setState({
-			board:board,
-			tiles:tiles,
-			boardLoaded:true,
-		});
+	/****************************************
+	          UTILITY FUNCTIONS
+	****************************************/
+
+	async storeData(board,tiles){
+		let response = null;
+		if (board && tiles){
+			response = await AsyncStorage.multiSet(
+				[['@thirtysix:board',JSON.stringify(board)],
+				['@thirtysix:tiles',JSON.stringify(tiles)]]
+			);
+		}else if (board){
+			response = await AsyncStorage.setItem('@thirtysix:board',JSON.stringify(board));
+		}else if (tiles){
+			response = await AsyncStorage.setItem('@thirtysix:tiles',JSON.stringify(tiles));
+		}else{
+			console.log("store error");
+		}
+		return response;
 	}
+
+	/****************************************
+	          RENDERING
+	****************************************/
 
 	renderTiles(){
 		let renderedTiles = [];	
@@ -394,42 +455,6 @@ export default class GameView extends Component {
 		tiles[key].orientation = (tiles[key].orientation + 1) % 4;
 		this.storeData(null,tiles);
 		this.setState({tiles:tiles});
-	}
-
-	async storeData(board,tiles){
-		let response = null;
-		if (board && tiles){
-			response = await AsyncStorage.multiSet(
-				[['@thirtysix:board',JSON.stringify(board)],
-				['@thirtysix:tiles',JSON.stringify(tiles)]]
-			);
-		}else if (board){
-			response = await AsyncStorage.setItem('@thirtysix:board',JSON.stringify(board));
-		}else if (tiles){
-			response = await AsyncStorage.setItem('@thirtysix:tiles',JSON.stringify(tiles));
-		}else{
-			console.log("store error");
-		}
-		return response;
-	}
-
-	addTile(index,key){
-		let randomtopValue = this.generateRandomValue();
-		let randombottomValue = this.generateRandomValue();
-
-		let tile={
-			isDraggable:true,
-			top:TILES_TOP,
-			left:10 + (cell_dim*2+5)*index,
-			topValue:randomtopValue,
-			bottomValue:randombottomValue,
-			key:key,
-			index:index,
-			orientation:0,
-		};
-
-		return tile;
-
 	}
 
 	render() {
