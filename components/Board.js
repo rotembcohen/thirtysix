@@ -16,7 +16,18 @@ export default class Board extends Component {
 			style = styles.cell_domino;
 		}
 
-		return (<Text style={style}>{(cell.state==='domino')?cell.value:cell.possible}</Text>);
+		let cellStyle = null;
+		if (cell.state!=='domino' && cell.possible===-1){
+			cellStyle= [styles.cell,styles.cellHole];
+		}else{
+			cellStyle= styles.cell;
+		}
+
+		return (
+			<View key={'row_' + i + '_col_' + j} style={cellStyle}>
+				<Text style={style}>{(cell.state==='domino')?cell.value:cell.possible}</Text>
+			</View>
+		);
 	}
 
 	createBoard(){
@@ -24,11 +35,7 @@ export default class Board extends Component {
 		for (let i = 0; i < GRID_SIZE; i++) { 
 			let col = [];
 			for (let j = 0; j < GRID_SIZE; j++){
-				col.push(
-					<View key={'row_' + i + '_col_' + j} style={styles.cell}>
-						{this.renderCell(i,j)}
-					</View>
-				);
+				col.push(this.renderCell(i,j));
 			}
 			grid.push(<View key={'col_'+i} style={styles.col}>{col}</View>);
 		}

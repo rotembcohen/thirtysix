@@ -57,6 +57,11 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
+	cellHole: {
+		backgroundColor: '#f66',
+		borderColor:'black',
+		borderWidth:2,
+	},
 	col: {
 		borderWidth: 1,
 		height: cell_dim * GRID_SIZE,
