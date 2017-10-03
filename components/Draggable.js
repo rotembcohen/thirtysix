@@ -29,7 +29,7 @@ export default class Draggable extends Component {
   }
 
   render() {
-    const {dragging, initialTop, initialLeft, offsetTop, offsetLeft} = this.state
+    const {dragging, initialTop, initialLeft, offsetTop, offsetLeft} = this.state;
 
     if (this.props.isDraggable){
       var borderWidth = 1;
@@ -73,11 +73,13 @@ export default class Draggable extends Component {
           {...this.panResponder.panHandlers}
           style={[styles.square, style]}
         >
-          <TouchableOpacity onPress={this.props.onPress}>
-            <Text style={styles.text}>
-              {tileText}
-            </Text>
+          <TouchableOpacity onPress={this.props.onPress} style={{alignItems:'center',justifyContent:'center',zIndex:2}}>
+            <View style={{width:cell_dim,height:cell_dim,borderWidth:borderWidth,borderRadius:cell_dim/2,top:0}} />
+            
           </TouchableOpacity>
+          <View style={{zIndex:1,top:(style.height-cell_dim)/2,height:cell_dim,width:cell_dim,position:'absolute',justifyContent:'center',alignItems:'center'}}>
+            <Text style={{textAlign:'center'}}>{tileText}</Text>
+          </View>
         </View>
       
     )
