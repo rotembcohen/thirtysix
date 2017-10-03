@@ -5,6 +5,8 @@ import {styles,GRID_SIZE,cell_dim,BOARD_TOP,TILES_TOP,INITIAL_TILES} from '../St
 import Draggable from '../components/Draggable';
 import Board from '../components/Board';
 
+win = false;
+
 export default class GameView extends Component {
 
 	/****************************************
@@ -23,7 +25,6 @@ export default class GameView extends Component {
 			currentX: null,
 			currentY: null,
 			boardLoaded:false,
-			win: false,
 			score: null,
 			bestScore: null,
 		}
@@ -254,7 +255,6 @@ export default class GameView extends Component {
 		let adjacentValue = (adjacentCell && adjacentCell.state==='domino') ? adjacentCell.value : -1;
 		let response = (adjacentValue <= 0 || adjacentValue === value);
 
-		//if (!response) console.log("check failed for row/col/value/boardValue: ",cell_row,cell_col,value,adjacentValue);
 		return response;
 	}
 	
@@ -310,7 +310,6 @@ export default class GameView extends Component {
 					var bottomRightBoardCell = board[currentCell.col+1][currentCell.row];
 					break;
 			}
-			// console.log("ruling is ok:",topLeftBoardCell.value,values.topLeft,bottomRightBoardCell.value,values.bottomRight);
 			
 			topLeftBoardCell.state="domino";
 			topLeftBoardCell.value=values.topLeft;
@@ -334,14 +333,18 @@ export default class GameView extends Component {
 			this.renderTiles();
 			
 			this.checkWin();
-			// console.log("win:",win);
-
-			//mark adjacent cells with the possible connecting options
-			this.generateHelperCells(topLeftBoardCell);
-			this.generateHelperCells(bottomRightBoardCell);
+			
+			if (!win){
+				//mark adjacent cells with the possible connecting options
+				this.generateHelperCells(topLeftBoardCell);
+				this.generateHelperCells(bottomRightBoardCell);
+			}
 			
 			//store changes
 			this.storeData({board:board,tiles:tiles,score:score});
+
+			//reset win
+			win = false;
 
 		}else{
 			// console.log("ruling error:",topLeftBoardCell.value,values.topLeft,bottomRightBoardCell.value,values.bottomRight);
@@ -377,24 +380,21 @@ export default class GameView extends Component {
 		//can't be helper - already has domino value
 		if (cell.state === 'domino') return;
 
-		if (cell.state === 'init' || cell.state === 'grey'){
+		//already marked as no possible options
+		if (cell.possible === -1) return;
 
-			//already marked as no possible options
-			if (cell.possible === -1) return;
+		//already marked as current value
+		if (cell.possible === value) return;
 
-			//already marked as current value
-			if (cell.possible === value) return;
-
-			//has different value - mark as impossible
-			if (cell.possible) {
-				cell.possible = -1;
-				
-			}else{
-				//else - mark only possible option as value
-				cell.possible = (value) ? value : null;
-			}
-			this.setState({board:board});
+		//has different value - mark as impossible
+		if (cell.possible) {
+			cell.possible = -1;
+		}else{
+			//else - mark only possible option as value
+			cell.possible = (value) ? value : null;
 		}
+		this.setState({board:board});
+	
 
 	}
 
@@ -402,14 +402,15 @@ export default class GameView extends Component {
 		let board = this.state.board;
 		//will store all remaining domino cells
 		let dominoCells = [];
-
 		//reset to default values
 		for (let i=0;i<GRID_SIZE;i++){
 			for (let j=0;j<GRID_SIZE;j++){
 				let cell = board[j][i];
 				if (cell.state === 'init') cell.possible = null;
 				if (cell.state === 'grey') cell.possible = cell.value;
-				if (cell.state === 'domino') dominoCells.push(cell);
+				if (cell.state === 'domino') {
+					dominoCells.push(cell);
+				}
 			}
 		}
 
@@ -424,13 +425,21 @@ export default class GameView extends Component {
 	          CHECKING WIN CONDITION
 	****************************************/
 
-	clearMarked(win){
+	clearMarked(){
 		let board = this.state.board;
 		for (i=0;i<GRID_SIZE;i++){
 			for (j=0;j<GRID_SIZE;j++){
 				if (board[i][j].marked && win){
-					board[i][j].state = 'init';
-					board[i][j].value = 0;
+					if (board[i][j].row === 0 || board[i][j].row === (GRID_SIZE-1)){
+						let randomValue = this.generateRandomValue();
+						board[i][j].value = randomValue;
+						board[i][j].possible = randomValue;
+						board[i][j].state = 'grey';
+					}else{
+						board[i][j].state = 'init';
+						board[i][j].value = 0;
+						board[i][j].possible = null;
+					}
 				}
 				board[i][j].marked = false;
 			}
@@ -444,57 +453,63 @@ export default class GameView extends Component {
 		//for a connection from one edge to the other
 		let board = this.state.board;
 		let i = 0;
-		let win = false;
+		let cell_row = 0;
+		//start from top row
 		while (win === false && i < GRID_SIZE){
 			
-			//start from top row
-			win = this.checkWinStep(i,0);
+			this.markAllConnected(board[i][cell_row]);
 			
 			//clear markings, and if win is true, clear all connected cells
-			this.clearMarked(win);
+			this.clearMarked();
 			i = i + 1;
+
 		}
 
 		//regenerate helper cells in case of win
 		if (win) this.refreshHelperCells();
 
-		return win;
+		return;
 	}
 
-	checkWinStep(cell_col,cell_row){
-		if (cell_col < 0 || cell_col >= GRID_SIZE) return false;
-		if (cell_row < 0 || cell_row >= GRID_SIZE) return false;
+	// recursive function that should be called from a top cell
+	// will mark all connected to input cell, ignore marked cells and update state
+	// with win=true if reached bottom, but will keep going as long as it can
+	markAllConnected(cell){
+		
+		//if cell already marked
+		if (cell.marked) return;
 
+		//if cell is empty
+		if (cell.state !== 'domino') return;
+
+		let cell_row = cell.row;
+		let cell_col = cell.col;
 		let board = this.state.board;
-		let currentCell = board[cell_col][cell_row];
-		
-		//if no tile in cell, break
-		if (currentCell.state !== 'domino') return false;
-		
-		//if already visited, break
-		if (currentCell.marked) return false;
+		board[cell_col][cell_row].marked = true;
 
-		//now mark as visited
-		currentCell.marked=true;
+		if (cell.edge === 'bottom' && win === false){
+			//reached bottom, set win as true
+			win = true;
+		}
 		this.setState({board:board});
 
-		if (currentCell.edge === 'bottom'){
-			//win condition
-			return true;
-		}else if (currentCell.state === 'domino'){
-			//continue another step in all directions
-			//we perform all steps in order to mark all connected cells
-			let step1 = this.checkWinStep(cell_col+1,cell_row);
-			let step2 = this.checkWinStep(cell_col,cell_row+1);
-			let step3 = this.checkWinStep(cell_col-1,cell_row);
-			let step4 = this.checkWinStep(cell_col,cell_row-1);
-			
-			//if at least one of them reached bottom - return true
-			return step1 || step2 || step3 || step4;
-		}else{
-			//dead end
-			return false;
+		if (cell_row > 0){
+			//cell not on vertical top, we can continue up
+			this.markAllConnected(board[cell_col][cell_row-1]);
 		}
+		if (cell_row < (GRID_SIZE - 1)){
+			//cell not on vertical bottom, we can continue down
+			this.markAllConnected(board[cell_col][cell_row+1]);
+		}
+		if (cell_col > 0){
+			//cell not on left most col, we can continue left
+			this.markAllConnected(board[cell_col-1][cell_row]);	
+		}
+		if (cell_col < (GRID_SIZE - 1)){
+			//cell not on right most col, we can continue right
+			this.markAllConnected(board[cell_col+1][cell_row]);	
+		}
+		return;
 	}
 
 	/****************************************
