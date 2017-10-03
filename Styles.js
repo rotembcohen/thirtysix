@@ -8,7 +8,7 @@ GRID_SIZE = 7;
 
 const {height, width} = Dimensions.get('window');
 cell_dim = Math.floor(width/GRID_SIZE);
-BOARD_TOP = -407;
+BOARD_TOP = -1*Math.ceil(width);
 BOARD_LEFT = 4;
 TILES_TOP = 0;
 INITIAL_TILES = 3;
