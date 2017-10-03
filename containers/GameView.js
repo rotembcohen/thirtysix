@@ -122,10 +122,13 @@ export default class GameView extends Component {
 		let randomtopValue = this.generateRandomValue();
 		let randombottomValue = this.generateRandomValue();
 
+		let tileTop = TILES_TOP + (cell_dim*2+5)*Math.floor(index/3);
+		let tileLeft = 10 + (cell_dim*2+5)*(index%3);
+
 		let tile={
 			isDraggable:true,
-			top:TILES_TOP,
-			left:10 + (cell_dim*2+5)*index,
+			top:tileTop,
+			left:tileLeft,
 			topValue:randomtopValue,
 			bottomValue:randombottomValue,
 			key:key,
@@ -591,9 +594,9 @@ export default class GameView extends Component {
 					<StatusBar hidden={true} />
 					<Board data={this.state.board} />
 					{this.renderTiles()}
-					<View>
-						<Text>Score:{this.state.score}</Text>
-						<Text>Best Score:{this.state.bestScore}</Text>
+					<View style={{top:100}}>
+						<Text>Your Score: {this.state.score}</Text>
+						<Text>Best Score: {this.state.bestScore}</Text>
 						<Button title="RESET" onPress={()=>{this.resetBoard()}} />
 					</View>
 				</View>
