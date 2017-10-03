@@ -11,7 +11,7 @@ cell_dim = Math.floor(width/GRID_SIZE);
 BOARD_TOP = -1*Math.ceil(width);
 BOARD_LEFT = 4;
 TILES_TOP = 0;
-INITIAL_TILES = 3;
+INITIAL_TILES = 6;
 MIDDLE_MARGIN = 0.33;
 
 const styles = StyleSheet.create({
