@@ -56,11 +56,14 @@ export default class Draggable extends Component {
 
     }
 
+    var alignmentOffsetTop = (this.props.orientation % 2 === 0) ? 0 : cell_dim/2;
+    var alignmentOffsetLeft = (this.props.orientation % 2 === 0) ? cell_dim/2 : 0;
+
     // Update style with the state of the drag thus far
     const style = {
       backgroundColor: dragging ? 'rgba(125,125,125,0.3)' : 'rgba(0,0,0,0)',
-      top: initialTop + offsetTop,
-      left: initialLeft + offsetLeft,
+      top: initialTop + offsetTop + alignmentOffsetTop,
+      left: initialLeft + offsetLeft + alignmentOffsetLeft,
       width: (this.props.orientation % 2 === 0) ? cell_dim : cell_dim * 2,
       height: (this.props.orientation % 2 === 0) ? cell_dim * 2 : cell_dim, 
       borderWidth: borderWidth,
@@ -113,8 +116,13 @@ export default class Draggable extends Component {
     let newTop = initialTop + gestureState.dy;
     let shouldMove = false;
     
+    //fix to account for tiles center alignment
+    let orientation = this.props.orientation;
+    let offsetTop = (orientation % 2) ? newTop + cell_dim/2 : newTop; 
+    let offsetLeft = (orientation % 2) ? newLeft : newLeft + cell_dim/2; 
+
     //place tile in the correct placement in cell ("snap into place")
-    let response = this.getCurrentCell(newLeft,newTop);
+    let response = this.getCurrentCell(offsetLeft,offsetTop);
     if (response['insideBoard'] && !response['isInTheMiddle']){
       newTop = response['row']*cell_dim + BOARD_TOP;
       newLeft = response['col']*cell_dim + BOARD_LEFT;
