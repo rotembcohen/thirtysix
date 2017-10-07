@@ -25,7 +25,7 @@ export default class Board extends Component {
 
 		return (
 			<View key={'row_' + i + '_col_' + j} style={cellStyle}>
-				<Text style={style}>{(cell.state==='domino')?cell.value:cell.possible}</Text>
+				<Text style={style}>{(cell.state==='domino'||cell.state==='grey')?cell.value:cell.possible}</Text>
 			</View>
 		);
 	}
