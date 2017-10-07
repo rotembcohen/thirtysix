@@ -191,7 +191,7 @@ export default class GameView extends Component {
 		let row = currentRow;
 		let col = currentCol;
 		let value = values.topLeft;
-		if (!this.matchTileBoard(row,col,value)) return false;
+		if (!this.matchTileBoard(row,col,value,true)) return false;
 		if (!this.matchAdjacent(row,col,value,orientation % 2)) return false;
 
 		//bottom or right:
@@ -200,7 +200,7 @@ export default class GameView extends Component {
 		value = values.bottomRight;
 		//if we checked top, now check bottom, left then right
 		let negativeOrientation = (orientation % 2) + 2;
-		if (!this.matchTileBoard(row,col,value)) return false;
+		if (!this.matchTileBoard(row,col,value,true)) return false;
 		if (!this.matchAdjacent(row,col,value,negativeOrientation)) return false;
 
 		//all checks passed, tile can be placed
@@ -252,10 +252,14 @@ export default class GameView extends Component {
 		
 	}
 
-	matchTileBoard(cell_row,cell_col,value){
+	matchTileBoard(cell_row,cell_col,value,direct_match=false){
 		let board = this.state.board;
 		let adjacentCell = (cell_row >= 0 && cell_col >= 0 && cell_row < GRID_SIZE && cell_col < GRID_SIZE) ? board[cell_col][cell_row] : null;
-		let adjacentValue = (adjacentCell && adjacentCell.state==='domino') ? adjacentCell.value : -1;
+		if (direct_match){
+			var adjacentValue = (adjacentCell && (adjacentCell.state==='domino' || adjacentCell.state==='grey')) ? adjacentCell.value : -1;
+		} else {
+			var adjacentValue = (adjacentCell && adjacentCell.state==='domino') ? adjacentCell.value : -1;
+		}
 		let response = (adjacentValue <= 0 || adjacentValue === value);
 
 		return response;
