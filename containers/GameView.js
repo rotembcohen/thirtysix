@@ -12,9 +12,24 @@ export default class GameView extends Component {
 	/****************************************
 	          COMPONENT INIT
 	****************************************/
-	static navigationOptions = {
-		title: 'thirtysix v0.1'
-	}
+	static navigationOptions = ({navigation})=>{
+		let title = 'thirtysix v0.1';
+		const { params } = navigation.state;
+		if (params){
+			return {
+				title: title,
+				headerRight: (
+					<View style={{marginRight:30}}><Button title="RESET" onPress={params.handleReset} /></View>
+				), 
+			}
+		}else{
+			let loadingText = <Text>Loading...</Text>;
+			return {
+				title: title,
+				headerRight: loadingText,
+			}
+		}
+	};
 
 	constructor(props){
 		super(props);
@@ -31,6 +46,11 @@ export default class GameView extends Component {
 	}
 
 	async componentWillMount(){
+		
+		this.props.navigation.setParams({
+			handleReset: this.resetBoard.bind(this)
+		});
+
 		//gets the board if it is saved in memory
 		//otherwise, creates a new one
 		var board = null;
@@ -601,7 +621,6 @@ export default class GameView extends Component {
 					<View style={{top:100}}>
 						<Text>Your Score: {this.state.score}</Text>
 						<Text>Best Score: {this.state.bestScore}</Text>
-						<Button title="RESET" onPress={()=>{this.resetBoard()}} />
 					</View>
 				</View>
 			);
